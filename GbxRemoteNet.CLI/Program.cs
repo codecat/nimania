@@ -32,8 +32,7 @@ namespace GbxRemoteNet.CLI
 
 			string hostname = args[0];
 			int port = int.Parse(args[1]);
-
-			string serverLogin = "";
+			
 			int serverAuthLevel = 0;
 
 			var rem = new GbxRemote();
