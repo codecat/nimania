@@ -18,6 +18,9 @@ namespace GbxRemoteNet
 		public const string DateTimeFormat = "yyyyMMdd\tHH:mm:ss";
 		public static CultureInfo Culture = new CultureInfo("en-US");
 
+		string m_connectHost;
+		int m_connectPort;
+
 		TcpClient m_client;
 		NetworkStream m_ns;
 		BinaryWriter m_writer;
@@ -30,17 +33,16 @@ namespace GbxRemoteNet
 
 		uint m_requestHandle = 0x80000000;
 
-		public bool ReportDebug = false;
-		public bool ReportError = true;
+		public static bool ReportDebug = false;
+		public static bool ReportError = true;
 
 		Dictionary<string, List<OnGbxCallback>> m_callbacks = new Dictionary<string, List<OnGbxCallback>>();
 
-		public GbxRemote()
-		{
-		}
-
 		public void Connect(string strHost, int iPort)
 		{
+			m_connectHost = strHost;
+			m_connectPort = iPort;
+
 			m_client = new TcpClient();
 			m_client.Connect(strHost, iPort);
 			m_ns = m_client.GetStream();
@@ -53,19 +55,21 @@ namespace GbxRemoteNet
 				throw new Exception("Unexpected protocol version: " + protocol);
 			}
 
+			PrintInfo("Connected!");
+
 			m_readThread = new Thread(new ThreadStart(ReadLoop));
 			m_keepReading = true;
 			m_readThread.Start();
 		}
 
-		private void FatalError(string str)
+		internal static void FatalError(string str)
 		{
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("[FATAL] " + str);
 			Console.ForegroundColor = ConsoleColor.Gray;
 		}
 
-		private void PrintError(string str)
+		internal static void PrintError(string str)
 		{
 			if (!ReportError) {
 				return;
@@ -75,7 +79,7 @@ namespace GbxRemoteNet
 			Console.ForegroundColor = ConsoleColor.Gray;
 		}
 
-		private void PrintDebug(string str)
+		internal static void PrintDebug(string str)
 		{
 			if (!ReportDebug) {
 				return;
@@ -85,7 +89,7 @@ namespace GbxRemoteNet
 			Console.ForegroundColor = ConsoleColor.Gray;
 		}
 
-		private void PrintInfo(string str)
+		internal static void PrintInfo(string str)
 		{
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.WriteLine("[INF] " + str);
@@ -95,64 +99,84 @@ namespace GbxRemoteNet
 		private void ReadLoop()
 		{
 			while (m_keepReading) {
-				uint size = m_reader.ReadUInt32();
-				uint handle = m_reader.ReadUInt32();
-				if (size == 0 || handle == 0) {
-					FatalError("Unexpected empty size or handle while reading GBX packet");
-					return;
-				}
-				string strXml = m_reader.ReadString(size);
-				PrintDebug(size + " bytes (handle " + handle.ToString("x8") + "): \"" + strXml + "\"");
-				XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
-				string str = xml.Root.Children[0].Name;
-				if (str == "methodResponse") {
-					var response = xml["methodResponse"];
-					if (response.Children[0].Name == "fault") {
-						PrintError(response["fault"]["value"]["struct"].Children[1]["string"].Value);
-						continue;
+				try {
+					uint size = m_reader.ReadUInt32();
+					uint handle = m_reader.ReadUInt32();
+					if (size == 0 || handle == 0) {
+						FatalError("Unexpected empty size or handle while reading GBX packet");
+						return;
 					}
-					if (!m_callbackTable.ContainsKey(handle)) {
-						continue;
-					}
-					var request = (GbxRequest)m_callbackTable[handle];
-					m_callbackTable.Remove(handle);
-					var callback = request.m_callback;
-					var respType = callback.GetType().GetGenericArguments()[0];
-					if (respType.BaseType != typeof(GbxResponse) && respType != typeof(GbxResponse)) {
-						PrintError("Generic response type must inherit from GbxResponse!");
-						continue;
-					}
-					var res = (GbxResponse)Activator.CreateInstance(respType);
-					res.m_value = new GbxValue(response["params"].Children[0]["value"].Children[0]);
-					Task.Factory.StartNew(() => {
-						callback.DynamicInvoke(res);
-						request.m_finished = true;
-						request.m_reset.Set();
-					});
-				} else if (str == "methodCall") {
-					var response = xml["methodCall"];
-					var methodCall = response["methodName"].Value;
-					var methodParams = response["params"];
-					var ret = new GbxCallback();
-					var retParams = new List<GbxValue>();
-					foreach (var param in methodParams.Children) {
-						retParams.Add(new GbxValue(param["value"].Children[0]));
-					}
-					ret.m_params = retParams.ToArray();
-					string methodCallLower = methodCall.ToLower();
-					if (m_callbacks.ContainsKey(methodCallLower)) {
-						foreach (var callback in m_callbacks[methodCallLower]) {
-							Task.Factory.StartNew(() => {
-								callback(ret);
-							});
+					string strXml = m_reader.ReadString(size);
+					PrintDebug(size + " bytes (handle " + handle.ToString("x8") + "): \"" + strXml + "\"");
+					XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
+					string str = xml.Root.Children[0].Name;
+					if (str == "methodResponse") {
+						var response = xml["methodResponse"];
+						if (response.Children[0].Name == "fault") {
+							PrintError(response["fault"]["value"]["struct"].Children[1]["string"].Value);
+							if (m_callbackTable.ContainsKey(handle)) {
+								var failedRequest = (GbxRequest)m_callbackTable[handle];
+								m_callbackTable.Remove(handle);
+								var failedCallback = failedRequest.m_callback;
+								Task.Factory.StartNew(() => {
+									failedCallback.DynamicInvoke(new object[] { null });
+									failedRequest.m_finished = true;
+									failedRequest.m_reset.Set();
+								});
+							}
+							continue;
+						}
+						if (!m_callbackTable.ContainsKey(handle)) {
+							continue;
+						}
+						var request = (GbxRequest)m_callbackTable[handle];
+						m_callbackTable.Remove(handle);
+						var callback = request.m_callback;
+						var respType = callback.GetType().GetGenericArguments()[0];
+						if (respType.BaseType != typeof(GbxResponse) && respType != typeof(GbxResponse)) {
+							PrintError("Generic response type must inherit from GbxResponse!");
+							continue;
+						}
+						var res = (GbxResponse)Activator.CreateInstance(respType);
+						res.m_value = new GbxValue(response["params"].Children[0]["value"].Children[0]);
+						Task.Factory.StartNew(() => {
+							callback.DynamicInvoke(res);
+							request.m_finished = true;
+							request.m_reset.Set();
+						});
+					} else if (str == "methodCall") {
+						var response = xml["methodCall"];
+						var methodCall = response["methodName"].Value;
+						var methodParams = response["params"];
+						var ret = new GbxCallback();
+						var retParams = new List<GbxValue>();
+						foreach (var param in methodParams.Children) {
+							retParams.Add(new GbxValue(param["value"].Children[0]));
+						}
+						ret.m_params = retParams.ToArray();
+						string methodCallLower = methodCall.ToLower();
+						if (m_callbacks.ContainsKey(methodCallLower)) {
+							foreach (var callback in m_callbacks[methodCallLower]) {
+								Task.Factory.StartNew(() => {
+									callback(ret);
+								});
+							}
 						}
 					}
+				} catch (IOException) {
+					if (m_keepReading) {
+						PrintError("Connection to server closed unexpectedly!");
+						PrintInfo("Reconnecting...");
+						Connect(m_connectHost, m_connectPort);
+					}
+					return;
 				}
 			}
 		}
 
 		public void Terminate()
 		{
+			m_keepReading = false;
 			if (m_client != null) {
 				m_client.Close();
 				m_client = null;
@@ -230,7 +254,7 @@ namespace GbxRemoteNet
 									writer.Write(", ");
 								}
 							}
-							writer.WriteLine(");");
+							writer.WriteLine(")");
 						}
 					}, methodName).Wait();
 
@@ -334,6 +358,49 @@ namespace GbxRemoteNet
 			var table = (Dictionary<string, GbxValue>)m_obj;
 			System.Diagnostics.Debug.Assert(table.ContainsKey(key));
 			return (T)table[key].m_obj;
+		}
+
+		public void DumpInfo()
+		{
+			DumpInfoInternal(0);
+		}
+
+		internal void DumpInfoInternal(int depth)
+		{
+			string indent = "";
+			for (int i = 0; i < depth; i++) {
+				indent += "  ";
+			}
+			if (m_type == GbxValueType.Boolean) {
+				GbxRemote.PrintInfo(indent + "(boolean) " + ((bool)m_obj));
+			} else if (m_type == GbxValueType.Integer) {
+				GbxRemote.PrintInfo(indent + "(int) " + ((int)m_obj));
+			} else if (m_type == GbxValueType.Double) {
+				GbxRemote.PrintInfo(indent + "(double) " + ((double)m_obj));
+			} else if (m_type == GbxValueType.String) {
+				GbxRemote.PrintInfo(indent + "(string) \"" + ((string)m_obj) + "\"");
+			} else if (m_type == GbxValueType.Base64) {
+				GbxRemote.PrintInfo(indent + "(b64) \"" + ((Base64String)m_obj).m_str + "\"");
+			} else if (m_type == GbxValueType.DateTime) {
+				GbxRemote.PrintInfo(indent + "(datetime) " + ((DateTime)m_obj));
+			} else if (m_type == GbxValueType.Array) {
+				GbxRemote.PrintInfo(indent + "(array) [");
+				var arr = (ArrayList)m_obj;
+				foreach (GbxValue v in arr) {
+					v.DumpInfoInternal(depth + 1);
+				}
+				GbxRemote.PrintInfo(indent + "]");
+			} else if (m_type == GbxValueType.Struct) {
+				GbxRemote.PrintInfo(indent + "(struct) {");
+				var dic = (Dictionary<string, GbxValue>)m_obj;
+				foreach (var key in dic.Keys) {
+					GbxRemote.PrintInfo(indent + "  \"" + key + "\":");
+					dic[key].DumpInfoInternal(depth + 1);
+				}
+				GbxRemote.PrintInfo(indent + "}");
+			} else {
+				GbxRemote.PrintInfo(indent + "(unknown)");
+			}
 		}
 	}
 
