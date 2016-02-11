@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Nimble.XML;
 
 namespace GbxRemoteNet
@@ -12,12 +13,9 @@ namespace GbxRemoteNet
 		{
 			GbxRemote rem = new GbxRemote();
 			rem.ReportDebug = true;
-      rem.Connect("localhost", 5000);
+			rem.Connect("localhost", 5000);
 			rem.Query("Authenticate", (GbxResponse res) => {
-				//rem.GenerateDocumentation("doc.txt");
-
-				rem.Execute("EnableCallbacks", true);
-      }, new string[] { "SuperAdmin", "SuperAdmin" });
+			}, new string[] { "SuperAdmin", "SuperAdmin" });
 
 			Console.WriteLine("Done");
 			Console.ReadKey();

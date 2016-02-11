@@ -9,6 +9,7 @@ using System.Dynamic;
 
 using Nimble.Extensions;
 using Nimble.Utils;
+using System.Net;
 
 namespace Nimble.XML
 {
@@ -74,7 +75,7 @@ namespace Nimble.XML
               break;
             }
           }
-          Value = strValue.ToString();
+          Value = WebUtility.HtmlDecode(strValue.ToString());
           return;
         } else {
           // xml tag
@@ -122,7 +123,7 @@ namespace Nimble.XML
               string strTextNodeContent = strValueTextNodes.ToString().Trim(new char[] { '\r', '\n', '\t' });
               if (strTextNodeContent.Length > 0) {
                 // add the text node to the children
-                tagTextNode.Value = strTextNodeContent;
+                tagTextNode.Value = WebUtility.HtmlDecode(strTextNodeContent);
                 strValueTextNodes.Clear();
                 Children.Add(tagTextNode);
                 // start a new text node
@@ -150,7 +151,7 @@ namespace Nimble.XML
         }
 
         // set value property
-        Value = strValue.ToString();
+        Value = WebUtility.HtmlDecode(strValue.ToString());
         strValue.Clear();
 
         // if there's useful content in the text node buffer
@@ -158,7 +159,7 @@ namespace Nimble.XML
           string strTextNodeContent = strValueTextNodes.ToString().Trim(new char[] { '\r', '\n', '\t' });
           if (strTextNodeContent.Length > 0) {
             // add the text node to the children
-            tagTextNode.Value = strValueTextNodes.ToString();
+            tagTextNode.Value = WebUtility.HtmlDecode(strValueTextNodes.ToString());
             strValueTextNodes.Clear();
             Children.Add(tagTextNode);
           }

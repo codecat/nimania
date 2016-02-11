@@ -7,6 +7,7 @@ using System.Threading;
 using Nimble.XML;
 using System.Collections;
 using System.Globalization;
+using System.Threading.Tasks;
 
 namespace GbxRemoteNet
 {
@@ -79,8 +80,15 @@ namespace GbxRemoteNet
 			if (!ReportDebug) {
 				return;
 			}
-			Console.ForegroundColor = ConsoleColor.White;
+			Console.ForegroundColor = ConsoleColor.Cyan;
 			Console.WriteLine("[DBG] " + str);
+			Console.ForegroundColor = ConsoleColor.Gray;
+		}
+
+		private void PrintInfo(string str)
+		{
+			Console.ForegroundColor = ConsoleColor.White;
+			Console.WriteLine("[INF] " + str);
 			Console.ForegroundColor = ConsoleColor.Gray;
 		}
 
@@ -106,8 +114,9 @@ namespace GbxRemoteNet
 					if (!m_callbackTable.ContainsKey(handle)) {
 						continue;
 					}
-					var callback = m_callbackTable[handle];
+					var request = (GbxRequest)m_callbackTable[handle];
 					m_callbackTable.Remove(handle);
+					var callback = request.m_callback;
 					var respType = callback.GetType().GetGenericArguments()[0];
 					if (respType.BaseType != typeof(GbxResponse) && respType != typeof(GbxResponse)) {
 						PrintError("Generic response type must inherit from GbxResponse!");
@@ -115,7 +124,11 @@ namespace GbxRemoteNet
 					}
 					var res = (GbxResponse)Activator.CreateInstance(respType);
 					res.m_value = new GbxValue(response["params"].Children[0]["value"].Children[0]);
-					((Delegate)callback).DynamicInvoke(res);
+					Task.Factory.StartNew(() => {
+						callback.DynamicInvoke(res);
+						request.m_finished = true;
+						request.m_reset.Set();
+					});
 				} else if (str == "methodCall") {
 					var response = xml["methodCall"];
 					var methodCall = response["methodName"].Value;
@@ -128,8 +141,10 @@ namespace GbxRemoteNet
 					ret.m_params = retParams.ToArray();
 					string methodCallLower = methodCall.ToLower();
 					if (m_callbacks.ContainsKey(methodCallLower)) {
-						foreach (var cb in m_callbacks[methodCallLower]) {
-							cb(ret);
+						foreach (var callback in m_callbacks[methodCallLower]) {
+							Task.Factory.StartNew(() => {
+								callback(ret);
+							});
 						}
 					}
 				}
@@ -153,9 +168,9 @@ namespace GbxRemoteNet
 			m_callbacks[strMethodLower].Add(func);
 		}
 
-		public void Query<T>(string strMethod, Action<T> callback, params dynamic[] args)
+		public GbxRequest Query<T>(string strMethod, Action<T> callback, params dynamic[] args)
 		{
-			string strXml = GbxRequest.Encode(strMethod, args, true);
+			string strXml = GbxEncode.Encode(strMethod, args, true);
 
 			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 
@@ -164,13 +179,17 @@ namespace GbxRemoteNet
 			}
 			m_requestHandle++;
 
-			m_callbackTable[m_requestHandle] = callback;
+			var ret = new GbxRequest(callback);
+
+			m_callbackTable[m_requestHandle] = ret;
 			WriteMessage(strXml, m_requestHandle);
+
+			return ret;
 		}
 
 		public void Execute(string strMethod, params dynamic[] args)
 		{
-			string strXml = GbxRequest.Encode(strMethod, args, true);
+			string strXml = GbxEncode.Encode(strMethod, args, true);
 
 			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 
@@ -197,13 +216,13 @@ namespace GbxRemoteNet
 				var methods = res.m_value.Get<ArrayList>();
 				foreach (GbxValue method in methods) {
 					string methodName = method.Get<string>();
-					writer.WriteLine(methodName + ":");
 
 					Query("system.methodSignature", (GbxResponse resSignature) => {
 						var sigs = resSignature.m_value.Get<ArrayList>();
 						foreach (GbxValue sig in sigs) {
 							var sigParams = sig.Get<ArrayList>();
-							for (int i = 0; i < sigParams.Count; i++) {
+							writer.Write(((GbxValue)sigParams[0]).Get<string>() + " " + methodName + "(");
+							for (int i = 1; i < sigParams.Count; i++) {
 								var value = (GbxValue)sigParams[i];
 								var sigParam = value.Get<string>();
 								writer.Write(sigParam);
@@ -211,11 +230,25 @@ namespace GbxRemoteNet
 									writer.Write(", ");
 								}
 							}
+							writer.WriteLine(");");
 						}
-						return;
-					}, methodName);
+					}, methodName).Wait();
+
+					writer.WriteLine();
+
+					Query("system.methodHelp", (GbxResponse resHelp) => {
+						var help = resHelp.m_value.Get<string>();
+						writer.WriteLine("  Description:");
+						writer.WriteLine("    " + help);
+					}, methodName).Wait();
+
+					writer.WriteLine();
+					writer.WriteLine();
 				}
-			});
+			}).Wait();
+
+			writer.Close();
+			Console.WriteLine("Wrote documentation to: " + filename);
 		}
 	}
 
@@ -304,6 +337,26 @@ namespace GbxRemoteNet
 		}
 	}
 
+	public class GbxRequest
+	{
+		public Delegate m_callback;
+		public bool m_finished;
+		public AutoResetEvent m_reset = new AutoResetEvent(false);
+
+		public GbxRequest(Delegate callback)
+		{
+			m_callback = callback;
+		}
+
+		public void Wait()
+		{
+			if (m_finished) {
+				return;
+			}
+			m_reset.WaitOne();
+		}
+	}
+
 	public class GbxResponse
 	{
 		public GbxValue m_value;
@@ -314,7 +367,7 @@ namespace GbxRemoteNet
 		public GbxValue[] m_params;
 	}
 
-	public static class GbxRequest
+	public static class GbxEncode
 	{
 		public static string Encode(string strMethod, dynamic[] args, bool bEscape = true)
 		{
