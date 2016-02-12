@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet", "GbxRemoteNe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet.CLI", "GbxRemoteNet.CLI\GbxRemoteNet.CLI.csproj", "{206EE90C-FAED-4558-8483-A40CDC200707}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania", "Nimania\Nimania.csproj", "{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania.Runtime", "Nimania.Runtime\Nimania.Runtime.csproj", "{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +33,22 @@ Global
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|Any CPU.Build.0 = Release|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|x86.ActiveCfg = Release|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|x86.Build.0 = Release|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|x86.Build.0 = Debug|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|x86.ActiveCfg = Release|Any CPU
+		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|x86.Build.0 = Release|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Debug|x86.Build.0 = Debug|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

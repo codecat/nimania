@@ -107,7 +107,7 @@ namespace GbxRemoteNet
 						return;
 					}
 					string strXml = m_reader.ReadString(size);
-					PrintDebug(size + " bytes (handle " + handle.ToString("x8") + "): \"" + strXml + "\"");
+					PrintDebug(size + " bytes (handle " + handle.ToString("x8") + ")");
 					XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
 					string str = xml.Root.Children[0].Name;
 					if (str == "methodResponse") {
@@ -139,6 +139,9 @@ namespace GbxRemoteNet
 						}
 						var res = (GbxResponse)Activator.CreateInstance(respType);
 						res.m_value = new GbxValue(response["params"].Children[0]["value"].Children[0]);
+						if (ReportDebug) {
+							res.m_value.DumpInfo(true);
+						}
 						Task.Factory.StartNew(() => {
 							callback.DynamicInvoke(res);
 							request.m_finished = true;
@@ -150,8 +153,15 @@ namespace GbxRemoteNet
 						var methodParams = response["params"];
 						var ret = new GbxCallback();
 						var retParams = new List<GbxValue>();
+						if (ReportDebug) {
+							PrintDebug("Callback " + methodCall + " with " + methodParams.Children.Count + " params:");
+						}
 						foreach (var param in methodParams.Children) {
-							retParams.Add(new GbxValue(param["value"].Children[0]));
+							var v = new GbxValue(param["value"].Children[0]);
+							retParams.Add(v);
+							if (ReportDebug) {
+								v.DumpInfo(true, 1);
+							}
 						}
 						ret.m_params = retParams.ToArray();
 						string methodCallLower = methodCall.ToLower();
@@ -181,6 +191,11 @@ namespace GbxRemoteNet
 				m_client.Close();
 				m_client = null;
 			}
+		}
+
+		public void EnableCallbacks(bool enable)
+		{
+			Execute("EnableCallbacks", enable);
 		}
 
 		public void AddCallback(string strMethod, OnGbxCallback func)
@@ -360,46 +375,55 @@ namespace GbxRemoteNet
 			return (T)table[key].m_obj;
 		}
 
-		public void DumpInfo()
+		public void DumpInfo(bool asDebug = false, int startDepth = 0)
 		{
-			DumpInfoInternal(0);
+			DumpInfoInternal(startDepth, asDebug);
 		}
 
-		internal void DumpInfoInternal(int depth)
+		internal void DrumpInfoString(bool asDebug, string s)
+		{
+			if (asDebug) {
+				GbxRemote.PrintDebug(s);
+			} else {
+				GbxRemote.PrintInfo(s);
+			}
+		}
+
+		internal void DumpInfoInternal(int depth, bool asDebug)
 		{
 			string indent = "";
 			for (int i = 0; i < depth; i++) {
 				indent += "  ";
 			}
 			if (m_type == GbxValueType.Boolean) {
-				GbxRemote.PrintInfo(indent + "(boolean) " + ((bool)m_obj));
+				DrumpInfoString(asDebug, indent + "(boolean) " + ((bool)m_obj));
 			} else if (m_type == GbxValueType.Integer) {
-				GbxRemote.PrintInfo(indent + "(int) " + ((int)m_obj));
+				DrumpInfoString(asDebug, indent + "(int) " + ((int)m_obj));
 			} else if (m_type == GbxValueType.Double) {
-				GbxRemote.PrintInfo(indent + "(double) " + ((double)m_obj));
+				DrumpInfoString(asDebug, indent + "(double) " + ((double)m_obj));
 			} else if (m_type == GbxValueType.String) {
-				GbxRemote.PrintInfo(indent + "(string) \"" + ((string)m_obj) + "\"");
+				DrumpInfoString(asDebug, indent + "(string) \"" + ((string)m_obj) + "\"");
 			} else if (m_type == GbxValueType.Base64) {
-				GbxRemote.PrintInfo(indent + "(b64) \"" + ((Base64String)m_obj).m_str + "\"");
+				DrumpInfoString(asDebug, indent + "(b64) \"" + ((Base64String)m_obj).m_str + "\"");
 			} else if (m_type == GbxValueType.DateTime) {
-				GbxRemote.PrintInfo(indent + "(datetime) " + ((DateTime)m_obj));
+				DrumpInfoString(asDebug, indent + "(datetime) " + ((DateTime)m_obj));
 			} else if (m_type == GbxValueType.Array) {
-				GbxRemote.PrintInfo(indent + "(array) [");
+				DrumpInfoString(asDebug, indent + "(array) [");
 				var arr = (ArrayList)m_obj;
 				foreach (GbxValue v in arr) {
-					v.DumpInfoInternal(depth + 1);
+					v.DumpInfoInternal(depth + 1, asDebug);
 				}
-				GbxRemote.PrintInfo(indent + "]");
+				DrumpInfoString(asDebug, indent + "]");
 			} else if (m_type == GbxValueType.Struct) {
-				GbxRemote.PrintInfo(indent + "(struct) {");
+				DrumpInfoString(asDebug, indent + "(struct) {");
 				var dic = (Dictionary<string, GbxValue>)m_obj;
 				foreach (var key in dic.Keys) {
-					GbxRemote.PrintInfo(indent + "  \"" + key + "\":");
-					dic[key].DumpInfoInternal(depth + 1);
+					DrumpInfoString(asDebug, indent + "  \"" + key + "\":");
+					dic[key].DumpInfoInternal(depth + 1, asDebug);
 				}
-				GbxRemote.PrintInfo(indent + "}");
+				DrumpInfoString(asDebug, indent + "}");
 			} else {
-				GbxRemote.PrintInfo(indent + "(unknown)");
+				DrumpInfoString(asDebug, indent + "(unknown)");
 			}
 		}
 	}
