@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manialink version="2" id="DeveloperBar">
+	<frame posn="60 -60">
+		<quad sizen="40 8" bgcolor="F002" />
+		<quad sizen="40 8" style="Bgs1" substyle="BgDialogBlur" />
+		<quad posn="1 -1 2" sizen="6 6" style="Icons128x128_1" substyle="ProfileVehicle" action="Developer.Reload" />
+		<quad posn="33 -1 2" sizen="6 6" style="Icons64x64_1" substyle="QuitRace" action="Developer.Shutdown" />
+	</frame>
+</manialink>

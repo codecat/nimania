@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manialink version="2" id="AdminBar">
+	<frame posn="100 -60">
+		<quad sizen="40 8" style="Bgs1" substyle="BgDialogBlur" />
+		<quad posn="1 -1 2" sizen="6 6" style="Icons64x64_1" substyle="ClipRewind" action="Admin.RestartMap" />
+		<quad posn="5 -1 2" sizen="6 6" style="Icons64x64_1" substyle="ClipPause" action="Admin.ForceEndRound" />
+		<quad posn="9 -1 2" sizen="6 6" style="Icons64x64_1" substyle="ClipPlay" action="Admin.NextMap" />
+	</frame>
+</manialink>
