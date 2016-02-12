@@ -45,6 +45,7 @@
     <Compile Include="Controller.cs" />
     <Compile Include="Plugins.cs" />
     <Compile Include="Plugins\Admin.cs" />
+    <Compile Include="Plugins\Developer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -7,11 +7,13 @@ using Nimania.Runtime;
 
 namespace Nimania.Plugins
 {
-	public class Admin : Plugin
+	public class Developer : Plugin
 	{
+		public Controller m_controller;
+
 		public override void Initialize()
 		{
-			SendViewToLogin("ansjh", "Admin/Bar.xml");
+			SendViewToLogin("ansjh", "Developer/Bar.xml");
 		}
 
 		public override void Uninitialize()
@@ -25,9 +27,8 @@ namespace Nimania.Plugins
 				return;
 			}
 			switch (action) {
-				case "RestartMap": m_remote.Execute("RestartMap"); break;
-				case "ForceEndRound": m_remote.Execute("ForceEndRound"); break;
-				case "NextMap": m_remote.Execute("NextMap"); break;
+				case "Reload": m_controller.Reload(); break;
+				case "Shutdown": m_controller.Shutdown(); break;
 			}
 		}
 	}

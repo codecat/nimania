@@ -32,6 +32,21 @@ namespace Nimania
 			m_remote.Terminate();
 		}
 
+		public void Reload()
+		{
+			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Reloading");
+			Stop();
+			Program.Running = false;
+		}
+
+		public void Shutdown()
+		{
+			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Shutting down");
+			Stop();
+			Program.Shutdown = true;
+			Program.Running = false;
+		}
+
 		public void Run()
 		{
 			GbxRemote.ReportDebug = m_config.GetBool("Debug.GbxRemote");
@@ -81,19 +96,9 @@ namespace Nimania
 				string login = cb.m_params[1].Get<string>();
 				string message = cb.m_params[2].Get<string>();
 				if (login == "ansjh") {
-					switch(message) {
-						case "/reload":
-							m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Reloading");
-							Stop();
-							Program.Running = false;
-							break;
-
-						case "/shutdown":
-							m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Shutting down");
-							Stop();
-							Program.Shutdown = true;
-							Program.Running = false;
-							break;
+					switch (message) {
+						case "/reload": Reload(); break;
+						case "/shutdown": Shutdown(); break;
 					}
 				}
 			});
@@ -102,6 +107,7 @@ namespace Nimania
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
 				switch (name) {
+					case "Developer": m_plugins.Add(new Developer() { m_controller = this, m_remote = m_remote }); break;
 					case "Admin": m_plugins.Add(new Admin() { m_remote = m_remote }); break;
 					default: Console.WriteLine("Unknown plugin: '" + name + "'"); break;
 				}

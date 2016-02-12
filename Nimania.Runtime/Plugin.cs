@@ -21,20 +21,20 @@ namespace Nimania.Runtime
 			m_remote.Execute("ChatSendServerMessage", s);
 		}
 
-		public void SendView(string file, params string[] kvs)
-		{
-			SendView(file, 0, false, kvs);
-		}
-
-		public void SendView(string file, int timeout, params string[] kvs)
-		{
-			SendView(file, timeout, false, kvs);
-		}
-
+		public void SendView(string file, params string[] kvs) { SendView(file, 0, false, kvs); }
+		public void SendView(string file, int timeout, params string[] kvs) { SendView(file, timeout, false, kvs); }
 		public void SendView(string file, int timeout, bool clickHides, params string[] kvs)
 		{
 			string xml = GetView(file, kvs);
 			m_remote.Execute("SendDisplayManialinkPage", xml, timeout, clickHides);
+		}
+		
+		public void SendViewToLogin(string login, string file, params string[] kvs) { SendViewToLogin(login, file, 0, false, kvs); }
+		public void SendViewToLogin(string login, string file, int timeout, params string[] kvs) { SendViewToLogin(login, file, timeout, false, kvs); }
+		public void SendViewToLogin(string login, string file, int timeout, bool clickHides, params string[] kvs)
+		{
+			string xml = GetView(file, kvs);
+			m_remote.Execute("SendDisplayManialinkPageToLogin", login, xml, timeout, clickHides);
 		}
 
 		private string GetView(string file, string[] kvs)
