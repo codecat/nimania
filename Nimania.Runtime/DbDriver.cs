@@ -27,7 +27,12 @@ namespace Nimania.Runtime
 	{
 		public string Tablename<T>()
 		{
-			var propTableName = typeof(T).GetProperty("Tablename");
+			return Tablename(typeof(T));
+		}
+
+		internal string Tablename(Type t)
+		{
+			var propTableName = t.GetProperty("Tablename");
 			if (propTableName == null) {
 				throw new Exception("Static 'Tablename' property not defined!");
 			}
@@ -36,21 +41,32 @@ namespace Nimania.Runtime
 
 		public string PrimaryKey<T>()
 		{
-			var propPrimaryKey = typeof(T).GetProperty("PrimaryKey");
+			return PrimaryKey(typeof(T));
+		}
+
+		internal string PrimaryKey(Type t)
+		{
+			var propPrimaryKey = t.GetProperty("PrimaryKey");
 			if (propPrimaryKey != null) {
 				return (string)propPrimaryKey.GetValue(null);
 			}
 			return "ID";
 		}
 
-		public virtual T Create<T>()
+		public T Create<T>()
 		{
-			var newModel = (DbModel)Activator.CreateInstance(typeof(T));
+			return (T)(object)Create(typeof(T));
+		}
+
+		internal DbModel Create(Type t)
+		{
+			var newModel = (DbModel)Activator.CreateInstance(t);
 			newModel.m_database = this;
-			return (T)(object)newModel;
+			return newModel;
 		}
 
 		public abstract T FindByPk<T>(int id);
+		public abstract DbModel FindByPk(int id, Type type);
 
 		public abstract T FindByAttributes<T>(params dynamic[] attributes);
 

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Plugins;
 using Nimania.Runtime;
+using Nimania.Runtime.DbModels;
 
 namespace Nimania.Runtime
 {
@@ -23,7 +24,7 @@ namespace Nimania.Runtime
 			m_database = dbDriver;
 		}
 
-		public void Load(string name)
+		public Plugin Load(string name)
 		{
 			Plugin newPlugin = null;
 			switch (name) {
@@ -34,12 +35,13 @@ namespace Nimania.Runtime
 
 			if (newPlugin == null) {
 				Console.WriteLine("Unknown plugin: '" + name + "'");
-				return;
+				return null;
 			}
 
 			newPlugin.m_remote = m_remote;
 			newPlugin.m_database = m_database;
 			m_plugins.Add(newPlugin);
+			return newPlugin;
 		}
 
 		public void Add(Plugin plugin)
@@ -78,6 +80,15 @@ namespace Nimania.Runtime
 				}
 			}
 			return null;
+		}
+
+		public void OnBeginChallenge()
+		{
+			foreach (var plugin in m_plugins) {
+				Task.Factory.StartNew(() => {
+					plugin.OnBeginChallenge();
+				});
+			}
 		}
 	}
 }

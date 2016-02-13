@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Nimania.Runtime
 {
-	public abstract class DbModel
+	public abstract class DbModel : ICloneable
 	{
 		internal DbDriver m_database;
 		internal Dictionary<string, object> m_originalData = new Dictionary<string, object>();
@@ -27,7 +27,11 @@ namespace Nimania.Runtime
 				} else if (field.FieldType == typeof(string)) {
 					v = row[columnName];
 				} else {
-					throw new Exception("Unknown column/field type: " + field.FieldType.Name + " for column '" + columnName + "'");
+					if (field.FieldType.BaseType == typeof(DbModel)) {
+						v = m_database.FindByPk(int.Parse(row[columnName]), field.FieldType);
+					} else {
+						throw new Exception("Unknown column/field type: " + field.FieldType.Name + " for column '" + columnName + "'");
+					}
 				}
 				field.SetValue(this, v);
 				m_originalData[columnName] = v;
@@ -51,8 +55,14 @@ namespace Nimania.Runtime
 			var ret = new List<string>();
 			foreach (var key in m_originalData.Keys) {
 				var field = type.GetField(key);
-				if (!m_originalData[key].Equals(field.GetValue(this))) {
-					ret.Add(key);
+				if (m_originalData[key] == null) {
+					if (field.GetValue(this) != null) {
+						ret.Add(key);
+					}
+				} else {
+					if (!m_originalData[key].Equals(field.GetValue(this))) {
+						ret.Add(key);
+					}
 				}
 			}
 			return ret.ToArray();
@@ -60,11 +70,20 @@ namespace Nimania.Runtime
 
 		public bool IsDirty()
 		{
+			if (!m_loaded) {
+				return true;
+			}
 			var type = GetType();
 			foreach (var key in m_originalData.Keys) {
 				var field = type.GetField(key);
-				if (!m_originalData[key].Equals(field.GetValue(this))) {
-					return true;
+				if (m_originalData[key] == null) {
+					if (field.GetValue(this) != null) {
+						return true;
+					}
+				} else {
+					if (!m_originalData[key].Equals(field.GetValue(this))) {
+						return true;
+					}
 				}
 			}
 			return false;
@@ -72,5 +91,7 @@ namespace Nimania.Runtime
 
 		public virtual void Save() { m_database.Save(this); }
 		public virtual void Insert() { m_database.Insert(this); }
+
+		public object Clone() { return MemberwiseClone(); }
 	}
 }

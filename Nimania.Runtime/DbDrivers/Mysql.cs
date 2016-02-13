@@ -117,13 +117,36 @@ namespace Nimania.Runtime.DbDrivers
 				return "'" + Safe((string)o) + "'";
 			} else if (o is int) {
 				return ((int)o).ToString();
-			}
+			} else if (o is DbModel) {
+				var type = o.GetType();
+				string primaryKey = PrimaryKey(type);
+				var fieldPk = type.GetField(primaryKey);
+				if (fieldPk == null) {
+					throw new Exception("Field for primary key '" + primaryKey + "' does not exist in model " + type.Name);
+				}
+				return ((int)fieldPk.GetValue(o)).ToString();
+      }
 			throw new Exception("Unknown type to encode: " + o.GetType().Name);
 		}
 
 		public override T FindByPk<T>(int id)
 		{
 			return FindByAttributes<T>("ID", id);
+		}
+
+		public override DbModel FindByPk(int id, Type type)
+		{
+			string tablename = Tablename(type);
+			string primaryKey = PrimaryKey(type);
+
+			string query = "SELECT * FROM `" + tablename + "` WHERE `" + primaryKey + "`=" + id;
+			var rows = Query(query);
+			if (rows.Length != 1) {
+				return null;
+			}
+			DbModel ret = Create(type);
+			ret.LoadRow(rows[0]);
+			return ret;
 		}
 
 		private string QueryOptions(DbQueryOptions options)

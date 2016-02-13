@@ -48,9 +48,13 @@
     <Compile Include="DbDriver.cs" />
     <Compile Include="DbDrivers\Mysql.cs" />
     <Compile Include="DbModel.cs" />
+    <Compile Include="DbModels\LocalTime.cs" />
     <Compile Include="DbModels\Map.cs" />
+    <Compile Include="DbModels\Player.cs" />
+    <Compile Include="GameInfo.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GbxRemoteNet\GbxRemoteNet.csproj">

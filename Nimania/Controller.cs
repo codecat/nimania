@@ -18,7 +18,9 @@ namespace Nimania
 		public GbxRemote m_remote;
 		public DbDriver m_database;
 
-		public PluginManager m_plugins;
+		private PluginManager m_plugins;
+
+		public GameInfo m_game;
 
 		public Controller(string configFilename)
 		{
@@ -76,6 +78,24 @@ namespace Nimania
 			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Starting 1.000");
 			m_remote.Execute("SendHideManialinkPage");
 
+			SetupCore();
+
+			Console.WriteLine("Loading plugins..");
+			m_plugins = new PluginManager(m_remote, m_database);
+			var pluginNames = m_config.GetArray("Plugins", "Plugin");
+			foreach (var name in pluginNames) {
+				var newPlugin = m_plugins.Load(name);
+				newPlugin.m_game = m_game;
+			}
+			m_plugins.Initialize();
+
+			m_remote.EnableCallbacks(true);
+		}
+
+		private void SetupCore()
+		{
+			m_game = new GameInfo();
+
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
 				string login = cb.m_params[1].Get<string>();
 				string action = cb.m_params[2].Get<string>();
@@ -108,15 +128,29 @@ namespace Nimania
 				}
 			});
 
-			Console.WriteLine("Loading plugins..");
-			m_plugins = new PluginManager(m_remote, m_database);
-			var pluginNames = m_config.GetArray("Plugins", "Plugin");
-			foreach (var name in pluginNames) {
-				m_plugins.Load(name);
-			}
-			m_plugins.Initialize();
+			m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
+				LoadMapInfo(res.m_value);
+			}).Wait(); // wait for this because plugin Initializers might need it
 
-			m_remote.EnableCallbacks(true);
+			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
+				LoadMapInfo(cb.m_params[0]);
+				m_plugins.OnBeginChallenge();
+			});
+		}
+
+		public void LoadMapInfo(GbxValue val)
+		{
+			string uid = val.Get<string>("UId");
+			var map = m_database.FindByAttributes<Map>("UId", uid);
+			if (map == null) {
+				map = m_database.Create<Map>();
+				map.UId = uid;
+				map.Name = val.Get<string>("Name");
+				map.Author = val.Get<string>("Author");
+				map.FileName = val.Get<string>("FileName");
+				map.Save();
+			}
+			m_game.m_currentMap = map;
 		}
 	}
 }

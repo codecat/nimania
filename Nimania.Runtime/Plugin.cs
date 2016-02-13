@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
+using Nimania.Runtime.DbModels;
 
 namespace Nimania.Runtime
 {
@@ -13,9 +14,12 @@ namespace Nimania.Runtime
 		public GbxRemote m_remote;
 		public DbDriver m_database;
 
+		public GameInfo m_game;
+
 		public abstract void Initialize();
 		public abstract void Uninitialize();
-		public abstract void OnAction(string login, string action);
+		public virtual void OnAction(string login, string action) { }
+		public virtual void OnBeginChallenge() { }
 
 		public void SendChat(string s)
 		{
@@ -38,7 +42,7 @@ namespace Nimania.Runtime
 			m_remote.Execute("SendDisplayManialinkPageToLogin", login, xml, timeout, clickHides);
 		}
 
-		private string GetView(string file, string[] kvs)
+		public string GetView(string file, params string[] kvs)
 		{
 			if (kvs.Length % 2 != 0) {
 				throw new Exception("Uneven amount of strings passed to SendView!");

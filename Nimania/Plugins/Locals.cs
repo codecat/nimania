@@ -13,35 +13,45 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
-				LoadMapInfo(res.m_value);
+			//TODO: Make an abstraction layer for checkpoints/finishing?
+			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxCallback cb) => {
+				string login = cb.m_params[1].Get<string>();
+				int time = cb.m_params[2].Get<int>();
+
+				// time is 0 on respawning
+				if (time == 0) {
+					return;
+				}
+
+				m_remote.Execute("ChatSendServerMessage", "$fffFinish time for $<$f00" + login + "$>: " + Utils.TimeString(time));
 			});
-			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
-				LoadMapInfo(cb.m_params[0]);
-			});
+
+			ReloadMapInfo();
 		}
 
 		public override void Uninitialize()
 		{
 		}
 
-		public override void OnAction(string login, string action)
+		public override void OnBeginChallenge()
 		{
+			ReloadMapInfo();
 		}
 
-		public void LoadMapInfo(GbxValue val)
+		public void ReloadMapInfo()
 		{
-			string uid = val.Get<string>("UId");
-			var map = m_database.FindByAttributes<Map>("UId", uid);
-			if (map == null) {
-				map = m_database.Create<Map>();
-				map.UId = uid;
-				map.Name = val.Get<string>("Name");
-				map.Author = val.Get<string>("Author");
-				map.FileName = val.Get<string>("FileName");
-				map.Save();
-      }
-			SendView("Locals/Widget.xml");
+			// sadly, we are forced to send the entire thing every time it updates. :(
+			string missTag = "$i$f39»$666Velox$f39|$fffMiss$f39..ノ";
+
+			string xmlItems = "";
+			for (int i = 0; i < 25; i++) {
+				xmlItems += GetView("Locals/Item.xml",
+					"y", (-3.5 * i).ToString(),
+					"place", (i + 1).ToString(),
+					"name", Utils.XmlEntities(missTag),
+					"time", Utils.TimeString(1234 + 456 * i * i));
+			}
+			SendView("Locals/Widget.xml", "items", xmlItems);
 		}
 	}
 }
