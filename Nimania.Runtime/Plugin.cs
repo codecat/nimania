@@ -11,6 +11,7 @@ namespace Nimania.Runtime
 	public abstract class Plugin
 	{
 		public GbxRemote m_remote;
+		public DbDriver m_database;
 
 		public abstract void Initialize();
 		public abstract void Uninitialize();

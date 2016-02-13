@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Plugins;
+using Nimania.Runtime;
 
 namespace Nimania.Runtime
 {
@@ -14,19 +15,31 @@ namespace Nimania.Runtime
 		private bool m_initialized = false;
 
 		private GbxRemote m_remote;
+		private DbDriver m_database;
 
-		public PluginManager(GbxRemote remote)
+		public PluginManager(GbxRemote remote, DbDriver dbDriver)
 		{
 			m_remote = remote;
+			m_database = dbDriver;
 		}
 
 		public void Load(string name)
 		{
+			Plugin newPlugin = null;
 			switch (name) {
-				case "Developer": m_plugins.Add(new Developer() { m_remote = m_remote }); break;
-				case "Admin": m_plugins.Add(new Admin() { m_remote = m_remote }); break;
-				default: Console.WriteLine("Unknown plugin: '" + name + "'"); break;
+				case "Developer": newPlugin = new Developer(); break;
+				case "Admin": newPlugin = new Admin(); break;
+				case "Locals": newPlugin = new Locals(); break;
 			}
+
+			if (newPlugin == null) {
+				Console.WriteLine("Unknown plugin: '" + name + "'");
+				return;
+			}
+
+			newPlugin.m_remote = m_remote;
+			newPlugin.m_database = m_database;
+			m_plugins.Add(newPlugin);
 		}
 
 		public void Add(Plugin plugin)

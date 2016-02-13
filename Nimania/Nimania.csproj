@@ -46,6 +46,7 @@
     <Compile Include="Plugins.cs" />
     <Compile Include="Plugins\Admin.cs" />
     <Compile Include="Plugins\Developer.cs" />
+    <Compile Include="Plugins\Locals.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -72,6 +73,7 @@
     <Content Include="Data\Views\Developer\Bar.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Data\Views\Locals\Widget.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

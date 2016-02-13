@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
+using Nimania.Runtime.DbDrivers;
+using Nimania.Runtime.DbModels;
 
 //TODO: Better (thread-safe) logging
 
@@ -14,6 +16,7 @@ namespace Nimania
 	{
 		public ConfigFile m_config;
 		public GbxRemote m_remote;
+		public DbDriver m_database;
 
 		public PluginManager m_plugins;
 
@@ -48,6 +51,11 @@ namespace Nimania
 		public void Run()
 		{
 			GbxRemote.ReportDebug = m_config.GetBool("Debug.GbxRemote");
+
+			string dbDriverName = m_config["Database.Driver"];
+			switch (dbDriverName.ToLower()) {
+				case "mysql": m_database = new Mysql(m_config); break;
+			}
 
 			m_remote = new GbxRemote();
 			m_remote.Connect(m_config["Server.Host"], m_config.GetInt("Server.Port"));
@@ -101,7 +109,7 @@ namespace Nimania
 			});
 
 			Console.WriteLine("Loading plugins..");
-			m_plugins = new PluginManager(m_remote);
+			m_plugins = new PluginManager(m_remote, m_database);
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
 				m_plugins.Load(name);

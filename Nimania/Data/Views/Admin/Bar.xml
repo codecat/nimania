@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 <manialink version="2" id="AdminBar">
 	<frame posn="100 -60">
 		<quad sizen="40 8" style="Bgs1" substyle="BgDialogBlur" />

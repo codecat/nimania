@@ -30,6 +30,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MySql.Data, Version=1.0.10.1, Culture=neutral, PublicKeyToken=c5687fc88969c44d">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\MySql.Data.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -41,6 +45,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfigFile.cs" />
+    <Compile Include="DbDriver.cs" />
+    <Compile Include="DbDrivers\Mysql.cs" />
+    <Compile Include="DbModel.cs" />
+    <Compile Include="DbModels\Map.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -50,6 +58,10 @@
       <Name>GbxRemoteNet</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="MySql.Data.dll" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
