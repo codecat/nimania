@@ -229,6 +229,7 @@ namespace GbxRemoteNet
 		public void Execute(string strMethod, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
+			PrintDebug("Sending " + strXml.Length + " bytes: \"" + strXml + "\"");
 
 			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 
@@ -517,11 +518,35 @@ namespace GbxRemoteNet
 
 		public static string Escape(string arg, bool bEscape)
 		{
-			//TODO: Is this even safe? Took this directly from Nadeo's PHP code..
 			if (bEscape) {
-				return "<![CDATA[" + arg.Replace("]]>", "]]]]><![CDATA[>") + "]]>";
+				return XmlEntities(arg);
 			}
 			return arg;
+		}
+
+		public static string XmlEntities(string s)
+		{
+			var sb = new StringBuilder();
+			int len = s.Length;
+			for (int i = 0; i < len; i++) {
+				char c = s[i];
+				switch (c) {
+					case '<': sb.Append("&lt;"); break;
+					case '>': sb.Append("&gt;"); break;
+					case '&': sb.Append("&amp;"); break;
+					case '"': sb.Append("&quot;"); break;
+					default:
+						if (c > 159) {
+							sb.Append("&#x");
+							sb.Append(((int)c).ToString("x"));
+							sb.Append(';');
+						} else {
+							sb.Append(c);
+						}
+						break;
+				}
+			}
+			return sb.ToString();
 		}
 	}
 
