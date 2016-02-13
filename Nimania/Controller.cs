@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
-using Nimania.Plugins;
 using Nimania.Runtime;
 
 //TODO: Better (thread-safe) logging
@@ -20,8 +19,7 @@ namespace Nimania
 
 		public Controller(string configFilename)
 		{
-			m_config = new ConfigFile("Data/Config.ini");
-			m_plugins = new PluginManager();
+			m_config = new ConfigFile(configFilename);
 		}
 
 		public void Stop()
@@ -69,7 +67,6 @@ namespace Nimania
 
 			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Starting 1.000");
 			m_remote.Execute("SendHideManialinkPage");
-			m_remote.EnableCallbacks(true);
 
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
 				string login = cb.m_params[1].Get<string>();
@@ -104,15 +101,14 @@ namespace Nimania
 			});
 
 			Console.WriteLine("Loading plugins..");
+			m_plugins = new PluginManager(m_remote);
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
-				switch (name) {
-					case "Developer": m_plugins.Add(new Developer() { m_controller = this, m_remote = m_remote }); break;
-					case "Admin": m_plugins.Add(new Admin() { m_remote = m_remote }); break;
-					default: Console.WriteLine("Unknown plugin: '" + name + "'"); break;
-				}
+				m_plugins.Load(name);
 			}
 			m_plugins.Initialize();
+
+			m_remote.EnableCallbacks(true);
 		}
 	}
 }

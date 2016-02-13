@@ -42,7 +42,11 @@ namespace Nimania.Runtime
 			if (kvs.Length % 2 != 0) {
 				throw new Exception("Uneven amount of strings passed to SendView!");
 			}
+#if DEBUG
+			string xml = File.ReadAllText("../../Data/Views/" + file);
+#else
 			string xml = File.ReadAllText("Data/Views/" + file);
+#endif
 			for (int i = 0; i < kvs.Length; i += 2) {
 				xml = xml.Replace("<?=" + kvs[i] + "?>", kvs[i + 1]);
 			}

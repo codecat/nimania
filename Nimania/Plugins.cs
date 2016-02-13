@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using GbxRemoteNet;
+using Nimania.Plugins;
 
 namespace Nimania.Runtime
 {
@@ -10,6 +12,22 @@ namespace Nimania.Runtime
 	{
 		private List<Plugin> m_plugins = new List<Plugin>();
 		private bool m_initialized = false;
+
+		private GbxRemote m_remote;
+
+		public PluginManager(GbxRemote remote)
+		{
+			m_remote = remote;
+		}
+
+		public void Load(string name)
+		{
+			switch (name) {
+				case "Developer": m_plugins.Add(new Developer() { m_remote = m_remote }); break;
+				case "Admin": m_plugins.Add(new Admin() { m_remote = m_remote }); break;
+				default: Console.WriteLine("Unknown plugin: '" + name + "'"); break;
+			}
+		}
 
 		public void Add(Plugin plugin)
 		{

@@ -9,8 +9,6 @@ namespace Nimania.Plugins
 {
 	public class Developer : Plugin
 	{
-		public Controller m_controller;
-
 		public override void Initialize()
 		{
 			SendViewToLogin("ansjh", "Developer/Bar.xml");
@@ -27,8 +25,8 @@ namespace Nimania.Plugins
 				return;
 			}
 			switch (action) {
-				case "Reload": m_controller.Reload(); break;
-				case "Shutdown": m_controller.Shutdown(); break;
+				case "Reload": Program.CurrentController.Reload(); break;
+				case "Shutdown": Program.CurrentController.Shutdown(); break;
 			}
 		}
 	}
