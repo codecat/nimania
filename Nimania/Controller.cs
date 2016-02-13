@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -128,17 +129,84 @@ namespace Nimania
 				}
 			});
 
-			m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
-				LoadMapInfo(res.m_value);
-			}).Wait(); // wait for this because plugin Initializers might need it
+			// Wait for these because plugin Initializers might need it
+			{
+				m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
+					m_game.m_currentMap = LoadMapInfo(res.m_value);
+				}).Wait();
+
+				m_remote.Query("GetPlayerList", (GbxResponse res) => {
+					var players = res.m_value.Get<ArrayList>();
+					foreach (GbxValue player in players) {
+						m_game.m_players.Add(LoadPlayerInfo(player));
+					}
+				}, 255, 0, 0).Wait();
+			}
 
 			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
-				LoadMapInfo(cb.m_params[0]);
+				m_game.m_currentMap = LoadMapInfo(cb.m_params[0]);
 				m_plugins.OnBeginChallenge();
+			});
+
+			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxCallback cb) => {
+				string login = cb.m_params[0].Get<string>();
+				m_remote.Query("GetPlayerInfo", (GbxResponse res) => {
+					lock (m_game.m_players) {
+						m_game.m_players.Add(LoadPlayerInfo(res.m_value));
+					}
+				}, login);
+			});
+
+			m_remote.AddCallback("TrackMania.PlayerInfoChanged", (GbxCallback cb) => {
+				GbxValue val = cb.m_params[0];
+				int id = val.Get<int>("PlayerId");
+
+				var player = m_game.GetPlayer(id);
+				if (player != null) {
+					player.m_nickname = val.Get<string>("NickName"); // not sure if this ever changes but whatever
+					player.m_team = val.Get<int>("TeamId");
+					player.m_spectating = val.Get<int>("SpectatorStatus") > 0; //TODO: save the status (player id?) off somewhere for feature-sake
+					player.m_ladder = val.Get<int>("LadderRanking");
+					//TODO: figure out val.Get<int>("Flags"); (which is actually a real value like 1000100, not using bitflags.. thanks nadeo)
+				}
+			});
+
+			m_remote.AddCallback("TrackMania.PlayerDisconnect", (GbxCallback cb) => {
+				string login = cb.m_params[0].Get<string>();
+				lock (m_game.m_players) {
+					for (int i = 0; i < m_game.m_players.Count; i++) {
+						if (m_game.m_players[i].m_login == login) {
+							m_game.m_players.RemoveAt(i);
+						}
+					}
+				}
 			});
 		}
 
-		public void LoadMapInfo(GbxValue val)
+		public PlayerInfo LoadPlayerInfo(GbxValue val)
+		{
+			var player = new PlayerInfo();
+			player.m_login = val.Get<string>("Login");
+			player.m_nickname = val.Get<string>("NickName");
+			player.m_id = val.Get<int>("PlayerId");
+			player.m_team = val.Get<int>("TeamId");
+			player.m_spectating = val.Get<bool>("IsSpectator");
+			player.m_officialMode = val.Get<bool>("IsInOfficialMode");
+			player.m_ladder = val.Get<int>("LadderRanking");
+			player.m_localPlayer = m_database.FindByAttributes<LocalPlayer>("Login", player.m_login);
+
+			if (player.m_localPlayer == null) {
+				player.m_localPlayer = m_database.Create<LocalPlayer>();
+				player.m_localPlayer.Login = player.m_login;
+			}
+
+			player.m_localPlayer.Nickname = player.m_nickname;
+			player.m_localPlayer.Save();
+
+			return player;
+		}
+
+		public Map LoadMapInfo(GbxValue val)
 		{
 			string uid = val.Get<string>("UId");
 			var map = m_database.FindByAttributes<Map>("UId", uid);
@@ -150,7 +218,7 @@ namespace Nimania
 				map.FileName = val.Get<string>("FileName");
 				map.Save();
 			}
-			m_game.m_currentMap = map;
+			return map;
 		}
 	}
 }

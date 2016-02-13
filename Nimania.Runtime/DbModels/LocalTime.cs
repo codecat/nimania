@@ -12,7 +12,7 @@ namespace Nimania.Runtime.DbModels
 
 		public int ID;
 		public Map Map;
-		public Player Player;
+		public LocalPlayer Player;
 		public int Time;
 		public string Checkpoints;
 	}

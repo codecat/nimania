@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Nimania.Runtime.DbModels
 {
-	public class Player : DbModel
+	public class LocalPlayer : DbModel
 	{
 		public static string Tablename { get { return "players"; } }
 
@@ -20,6 +20,14 @@ namespace Nimania.Runtime.DbModels
 			get
 			{
 				return Regex.Replace(Nickname, "\\$([0-9a-f]{3}|[ibnwsz<>]|[lh](\\[[^\\]]+\\])?)", "");
+			}
+		}
+
+		public string NoLinkNickname
+		{
+			get
+			{
+				return Regex.Replace(Nickname, "\\$([lh](\\[[^\\]]+\\])?)", "");
 			}
 		}
 	}

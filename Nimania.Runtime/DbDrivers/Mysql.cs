@@ -252,6 +252,12 @@ namespace Nimania.Runtime.DbDrivers
 				return;
 			}
 
+			var dirtyKeys = model.DirtyKeys();
+			if (dirtyKeys.Length == 0) {
+				// nothing to do here..
+				return;
+			}
+
 			var type = model.GetType();
 
 			var propTableName = type.GetProperty("Tablename");
@@ -264,12 +270,6 @@ namespace Nimania.Runtime.DbDrivers
 			var primaryKey = "ID";
 			if (propPrimaryKey != null) {
 				primaryKey = (string)propPrimaryKey.GetValue(null);
-			}
-
-			var dirtyKeys = model.DirtyKeys();
-			if (dirtyKeys.Length == 0) {
-				// nothing to do here..
-				return;
 			}
 
 			string query = "UPDATE `" + tableName + "` SET ";
