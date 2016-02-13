@@ -33,6 +33,7 @@ namespace Nimania.Runtime
 				case "Developer": newPlugin = new Developer(); break;
 				case "Admin": newPlugin = new Admin(); break;
 				case "Locals": newPlugin = new Locals(); break;
+				case "Dedimania": newPlugin = new Dedimania(); break;
 			}
 
 			if (newPlugin == null) {
@@ -57,6 +58,8 @@ namespace Nimania.Runtime
 
 		public void Initialize()
 		{
+			//TODO: Initialize plugins simultaneously and use tasks to wait for them to complete
+			//TODO: Before you do that, make sure that GbxRemoteNet is thread-safe.. it's probably not.
 			foreach (var plugin in m_plugins) {
 				plugin.Initialize();
 			}
@@ -87,10 +90,23 @@ namespace Nimania.Runtime
 
 		public void OnBeginChallenge()
 		{
-			foreach (var plugin in m_plugins) {
-				Task.Factory.StartNew(() => {
-					plugin.OnBeginChallenge();
-				});
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnBeginChallenge();
+					});
+				}
+			}
+		}
+
+		public void OnPlayerConnect(string login)
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnPlayerConnect(login);
+					});
+				}
 			}
 		}
 	}

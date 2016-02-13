@@ -210,6 +210,7 @@ namespace GbxRemoteNet
 		public GbxRequest Query<T>(string strMethod, Action<T> callback, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
+			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
 
 			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 
@@ -226,10 +227,19 @@ namespace GbxRemoteNet
 			return ret;
 		}
 
+		public GbxResponse QueryWait(string strMethod, params dynamic[] args)
+		{
+			GbxResponse ret = null;
+			Query(strMethod, (GbxResponse res) => {
+				ret = res;
+			}, args).Wait();
+			return ret;
+		}
+
 		public void Execute(string strMethod, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
-			PrintDebug("Sending " + strXml.Length + " bytes: \"" + strXml + "\"");
+			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
 
 			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 

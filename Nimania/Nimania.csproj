@@ -32,6 +32,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CookComputing.XmlRpcV2, Version=3.0.0.0, Culture=neutral, PublicKeyToken=a7d6e17aa302004d, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>.\CookComputing.XmlRpcV2.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -45,6 +49,7 @@
     <Compile Include="Controller.cs" />
     <Compile Include="Plugins.cs" />
     <Compile Include="Plugins\Admin.cs" />
+    <Compile Include="Plugins\Dedimania.cs" />
     <Compile Include="Plugins\Developer.cs" />
     <Compile Include="Plugins\Locals.cs" />
     <Compile Include="Program.cs" />
@@ -67,6 +72,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CookComputing.XmlRpcV2.dll" />
     <Content Include="Data\Views\Admin\Bar.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

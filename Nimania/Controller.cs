@@ -131,9 +131,20 @@ namespace Nimania
 
 			// Wait for these because plugin Initializers might need it
 			{
-				m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
-					m_game.m_currentMap = LoadMapInfo(res.m_value);
+				m_remote.Query("GetSystemInfo", (GbxResponse res) => {
+					m_game.m_serverIP = res.m_value.Get<string>("PublishedIp");
+					m_game.m_serverPort = res.m_value.Get<int>("Port");
+					m_game.m_serverLogin = res.m_value.Get<string>("ServerLogin");
 				}).Wait();
+
+				m_game.m_serverName = m_remote.QueryWait("GetServerName").m_value.Get<string>();
+				m_game.m_serverComment = m_remote.QueryWait("GetServerComment").m_value.Get<string>();
+				m_game.m_serverPrivate = m_remote.QueryWait("GetHideServer").m_value.Get<int>() == 1;
+				m_game.m_serverMaxPlayers = m_remote.QueryWait("GetMaxPlayers").m_value.Get<int>("CurrentValue");
+				m_game.m_serverMaxSpecs = m_remote.QueryWait("GetMaxSpectators").m_value.Get<int>("CurrentValue");
+				m_game.m_serverGameMode = m_remote.QueryWait("GetGameMode").m_value.Get<int>();
+
+				m_game.m_currentMap = LoadMapInfo(m_remote.QueryWait("GetCurrentMapInfo").m_value);
 
 				m_remote.Query("GetPlayerList", (GbxResponse res) => {
 					var players = res.m_value.Get<ArrayList>();
@@ -154,8 +165,8 @@ namespace Nimania
 					lock (m_game.m_players) {
 						m_game.m_players.Add(LoadPlayerInfo(res.m_value));
 					}
+					m_plugins.OnPlayerConnect(login);
 				}, login);
-				//TODO: Do we have to send manialinks here? if so, we need to add a Plugin method
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerInfoChanged", (GbxCallback cb) => {

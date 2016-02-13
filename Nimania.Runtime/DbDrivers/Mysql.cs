@@ -219,7 +219,7 @@ namespace Nimania.Runtime.DbDrivers
 			var ret = new T[rows.Length];
 			for (int i = 0; i < rows.Length; i++) {
 				var newModel = (DbModel)(object)Create<T>();
-				newModel.LoadRow(rows[0]);
+				newModel.LoadRow(rows[i]);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;

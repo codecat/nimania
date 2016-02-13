@@ -95,9 +95,9 @@ namespace Nimania.Plugins
 			lock (m_localTimes) {
 				m_localTimes.Sort((LocalTime a, LocalTime b) => {
 					if (a.Time < b.Time)
-						return 1;
-					else if (a.Time > b.Time)
 						return -1;
+					else if (a.Time > b.Time)
+						return 1;
 					return 0;
 				});
 			}
@@ -110,6 +110,11 @@ namespace Nimania.Plugins
 		public override void OnBeginChallenge()
 		{
 			ReloadMapInfo();
+		}
+
+		public override void OnPlayerConnect(string login)
+		{
+			SendWidget(login);
 		}
 
 		public void ReloadMapInfo()
@@ -129,7 +134,7 @@ namespace Nimania.Plugins
 			SendWidget();
 		}
 
-		public void SendWidget()
+		public void SendWidget(string login = "")
 		{
 			// sadly, we are forced to send the entire thing every time it updates. :(
 			string xmlItems = "";
@@ -145,7 +150,11 @@ namespace Nimania.Plugins
 				}
 			}
 
-			SendView("Locals/Widget.xml", "items", xmlItems);
+			if (login == "") {
+				SendView("Locals/Widget.xml", "items", xmlItems);
+			} else {
+				SendViewToLogin(login, "Locals/Widget.xml", "items", xmlItems);
+			}
 		}
 	}
 }
