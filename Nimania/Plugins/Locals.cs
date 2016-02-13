@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
+using Nimania.Runtime.DbModels;
 
 namespace Nimania.Plugins
 {
@@ -13,12 +14,10 @@ namespace Nimania.Plugins
 		public override void Initialize()
 		{
 			m_remote.Query("GetCurrentMapInfo", (GbxResponse res) => {
-				string uid = res.m_value.Get<string>("UId");
-				LoadMapInfo(uid);
+				LoadMapInfo(res.m_value);
 			});
 			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
-				string uid = cb.m_params[0].Get<string>("UId");
-				LoadMapInfo(uid);
+				LoadMapInfo(cb.m_params[0]);
 			});
 		}
 
@@ -30,9 +29,19 @@ namespace Nimania.Plugins
 		{
 		}
 
-		public void LoadMapInfo(string uid)
+		public void LoadMapInfo(GbxValue val)
 		{
-
+			string uid = val.Get<string>("UId");
+			var map = m_database.FindByAttributes<Map>("UId", uid);
+			if (map == null) {
+				map = m_database.Create<Map>();
+				map.UId = uid;
+				map.Name = val.Get<string>("Name");
+				map.Author = val.Get<string>("Author");
+				map.FileName = val.Get<string>("FileName");
+				map.Save();
+      }
+			SendView("Locals/Widget.xml");
 		}
 	}
 }

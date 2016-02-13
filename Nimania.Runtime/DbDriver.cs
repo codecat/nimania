@@ -43,6 +43,13 @@ namespace Nimania.Runtime
 			return "ID";
 		}
 
+		public virtual T Create<T>()
+		{
+			var newModel = (DbModel)Activator.CreateInstance(typeof(T));
+			newModel.m_database = this;
+			return (T)(object)newModel;
+		}
+
 		public abstract T FindByPk<T>(int id);
 
 		public abstract T FindByAttributes<T>(params dynamic[] attributes);
@@ -52,5 +59,8 @@ namespace Nimania.Runtime
 
 		public abstract T[] FindAll<T>();
 		public abstract T[] FindAll<T>(DbQueryOptions options);
+
+		public abstract void Save(DbModel model);
+		public abstract void Insert(DbModel model);
 	}
 }

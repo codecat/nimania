@@ -67,6 +67,23 @@ namespace Nimania.Runtime.DbDrivers
 			return Rows(dr);
 		}
 
+		private int QueryScalarInt(string qry)
+		{
+			m_threadLock.WaitOne();
+
+			IDbCommand dbcmd = m_connection.CreateCommand();
+			dbcmd.CommandText = qry;
+			object ret = null;
+			try {
+				ret = dbcmd.ExecuteScalar();
+			} catch (Exception ex) {
+				Console.WriteLine("\n********************************************\nQUERY ERROR:\n" +
+					ex.Message + "\n\nQUERY WAS:\n" + qry + "\n********************************************");
+			}
+			m_threadLock.ReleaseMutex();
+			return Convert.ToInt32(ret);
+		}
+
 		private Dictionary<string, string>[] Rows(IDataReader rowdata)
 		{
 			var rows = new List<Dictionary<string, string>>();
@@ -97,7 +114,7 @@ namespace Nimania.Runtime.DbDrivers
 		private string Encode(object o)
 		{
 			if (o is string) {
-				return "\"" + Safe((string)o) + "\"";
+				return "'" + Safe((string)o) + "'";
 			} else if (o is int) {
 				return ((int)o).ToString();
 			}
@@ -159,7 +176,7 @@ namespace Nimania.Runtime.DbDrivers
 			if (rows.Length != 1) {
 				return default(T);
 			}
-			var newModel = (DbModel)(object)(T)Activator.CreateInstance(typeof(T));
+			var newModel = (DbModel)(object)Create<T>();
 			newModel.LoadRow(rows[0]);
 			return (T)(object)newModel;
 		}
@@ -178,7 +195,7 @@ namespace Nimania.Runtime.DbDrivers
 			var rows = Query(query);
 			var ret = new T[rows.Length];
 			for (int i = 0; i < rows.Length; i++) {
-				var newModel = (DbModel)(object)(T)Activator.CreateInstance(typeof(T));
+				var newModel = (DbModel)(object)Create<T>();
 				newModel.LoadRow(rows[0]);
 				ret[i] = (T)(object)newModel;
 			}
@@ -198,11 +215,107 @@ namespace Nimania.Runtime.DbDrivers
 			var rows = Query(query);
 			var ret = new T[rows.Length];
 			for (int i = 0; i < rows.Length; i++) {
-				var newModel = (DbModel)(object)(T)Activator.CreateInstance(typeof(T));
+				var newModel = (DbModel)(object)Create<T>();
 				newModel.LoadRow(rows[i]);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;
+		}
+
+		public override void Save(DbModel model)
+		{
+			if (!model.m_loaded) {
+				Insert(model);
+				return;
+			}
+
+			var type = model.GetType();
+
+			var propTableName = type.GetProperty("Tablename");
+			if (propTableName == null) {
+				throw new Exception("Static 'Tablename' property not defined!");
+			}
+			var tableName = propTableName.GetValue(model);
+
+			var propPrimaryKey = type.GetProperty("PrimaryKey");
+			var primaryKey = "ID";
+			if (propPrimaryKey != null) {
+				primaryKey = (string)propPrimaryKey.GetValue(null);
+			}
+
+			var dirtyKeys = model.DirtyKeys();
+			if (dirtyKeys.Length == 0) {
+				// nothing to do here..
+				return;
+			}
+
+			string query = "UPDATE `" + tableName + "` SET ";
+			for (int i = 0; i < dirtyKeys.Length; i++) {
+				if (i > 0) {
+					query += ",";
+				}
+				var field = type.GetField(dirtyKeys[i]);
+				query += "`" + dirtyKeys[i] + "`=" + Encode(field.GetValue(model));
+			}
+
+			var fieldPk = type.GetField(primaryKey);
+			query += " WHERE `" + primaryKey + "`=" + (int)fieldPk.GetValue(model);
+
+			Query(query);
+			model.ResetDirty();
+		}
+
+		public override void Insert(DbModel model)
+		{
+			var type = model.GetType();
+
+			var propTableName = type.GetProperty("Tablename");
+			if (propTableName == null) {
+				throw new Exception("Static 'Tablename' property not defined!");
+			}
+			var tableName = propTableName.GetValue(model);
+
+			var propPrimaryKey = type.GetProperty("PrimaryKey");
+			var primaryKey = "ID";
+			if (propPrimaryKey != null) {
+				primaryKey = (string)propPrimaryKey.GetValue(null);
+			}
+
+			string query = "INSERT INTO `" + tableName + "` (";
+			string queryValues = "";
+
+			var fields = type.GetFields();
+			var i = 0;
+			foreach (var field in fields) {
+				if (field.Name.StartsWith("m_")) {
+					continue;
+				}
+				if (field.Name == primaryKey) {
+					continue;
+				}
+				if (i > 0) {
+					query += ",";
+					queryValues += ",";
+				}
+
+				object v = field.GetValue(model);
+				query += "`" + field.Name + "`";
+				queryValues += Encode(v);
+				i++;
+
+				model.m_originalData[field.Name] = v;
+			}
+
+			query += ") VALUES(" + queryValues + ");SELECT LAST_INSERT_ID();";
+
+			int newPk = QueryScalarInt(query);
+
+			var fieldPk = type.GetField(primaryKey);
+			if (fieldPk != null) {
+				fieldPk.SetValue(model, newPk);
+			}
+
+			model.m_loaded = true;
 		}
 	}
 }
