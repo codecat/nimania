@@ -82,7 +82,7 @@ namespace Nimania
 			SetupCore();
 
 			Console.WriteLine("Loading plugins..");
-			m_plugins = new PluginManager(m_remote, m_database);
+			m_plugins = new PluginManager(m_config, m_remote, m_database);
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
 				var newPlugin = m_plugins.Load(name);
@@ -155,6 +155,7 @@ namespace Nimania
 						m_game.m_players.Add(LoadPlayerInfo(res.m_value));
 					}
 				}, login);
+				//TODO: Do we have to send manialinks here? if so, we need to add a Plugin method
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerInfoChanged", (GbxCallback cb) => {

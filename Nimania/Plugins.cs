@@ -15,11 +15,13 @@ namespace Nimania.Runtime
 		private List<Plugin> m_plugins = new List<Plugin>();
 		private bool m_initialized = false;
 
+		private ConfigFile m_config;
 		private GbxRemote m_remote;
 		private DbDriver m_database;
 
-		public PluginManager(GbxRemote remote, DbDriver dbDriver)
+		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
+			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
 		}
@@ -38,6 +40,7 @@ namespace Nimania.Runtime
 				return null;
 			}
 
+			newPlugin.m_config = m_config;
 			newPlugin.m_remote = m_remote;
 			newPlugin.m_database = m_database;
 			m_plugins.Add(newPlugin);
