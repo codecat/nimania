@@ -190,7 +190,9 @@ namespace Nimania
 
 						var cps = player.Get<ArrayList>("BestCheckpoints");
 						foreach (GbxValue cp in cps) {
-							ply.m_checkpoints.Add(cp.Get<int>());
+							int cpt = cp.Get<int>();
+							ply.m_checkpoints.Add(cpt);
+							ply.m_bestCheckpoints.Add(cpt);
 						}
 					}
 				}
@@ -206,6 +208,10 @@ namespace Nimania
 					}
 				}
 				m_plugins.OnBeginChallenge();
+			});
+
+			m_remote.AddCallback("TrackMania.EndChallenge", (GbxCallback cb) => {
+				m_plugins.OnEndChallenge();
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxCallback cb) => {
@@ -284,6 +290,9 @@ namespace Nimania
 				if (time < player.m_bestTime || player.m_bestTime == -1) {
 					player.m_prevBestTime = player.m_bestTime;
 					player.m_bestTime = time;
+					player.m_bestCheckpoints.Clear();
+					player.m_bestCheckpoints.AddRange(player.m_checkpoints);
+					//TODO: Distinct between all/lap checkpoints
 				}
 				player.m_lastTime = time;
 				m_plugins.OnPlayerFinish(player, time, player.m_checkpoints.ToArray());

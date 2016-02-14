@@ -399,7 +399,7 @@ namespace GbxRemoteNet
 				m_obj = tag.Value;
 			} else if (tag.Name == "base64") {
 				m_type = GbxValueType.Base64;
-				m_obj = new Base64String(tag.Value, true);
+				m_obj = Convert.FromBase64String(tag.Value);
 			} else if (tag.Name == "dateTime.iso8601") {
 				DateTime dt = new DateTime();
 				if (DateTime.TryParseExact(tag.Value, GbxRemote.DateTimeFormat, GbxRemote.Culture, DateTimeStyles.None, out dt)) {
@@ -472,7 +472,7 @@ namespace GbxRemoteNet
 			} else if (m_type == GbxValueType.String) {
 				DrumpInfoString(asDebug, indent + "(string) \"" + ((string)m_obj) + "\"");
 			} else if (m_type == GbxValueType.Base64) {
-				DrumpInfoString(asDebug, indent + "(b64) \"" + ((Base64String)m_obj).m_str + "\"");
+				DrumpInfoString(asDebug, indent + "(base64) " + ((byte[])m_obj).Length + " bytes");
 			} else if (m_type == GbxValueType.DateTime) {
 				DrumpInfoString(asDebug, indent + "(datetime) " + ((DateTime)m_obj));
 			} else if (m_type == GbxValueType.Array) {
@@ -552,11 +552,11 @@ namespace GbxRemoteNet
 				return "<double>" + arg.ToString(GbxRemote.Culture) + "</double>";
 			} else if (arg is string) {
 				return "<string>" + Escape((string)arg, bEscape) + "</string>";
-			} else if (arg is Base64String) {
+			} else if (arg is byte[]) {
 				if (arg.m_str64 == "") {
 					return "<base64/>";
 				} else {
-					return "<base64>" + ((Base64String)arg).m_str64 + "</base64>";
+					return "<base64>" + Convert.ToBase64String((byte[])arg) + "</base64>";
 				}
 			} else if (arg is DateTime) {
 				return "<dateTime.iso8601>" + ((DateTime)arg).ToString(GbxRemote.DateTimeFormat, GbxRemote.Culture) + "</dateTime.iso8601>";

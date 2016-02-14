@@ -21,7 +21,7 @@ namespace Nimania.Plugins
 		private void SortTimes()
 		{
 			lock (m_localTimes) {
-				m_localTimes.Sort((LocalTime a, LocalTime b) => {
+				m_localTimes.Sort((a, b) => {
 					if (a.Time < b.Time)
 						return -1;
 					else if (a.Time > b.Time)
@@ -47,9 +47,11 @@ namespace Nimania.Plugins
 
 		public override void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints)
 		{
-			bool hadTime = false;
+			bool updated = false;
 
 			lock (m_localTimes) {
+				bool hadTime = false;
+
 				for (int i = 0; i < m_localTimes.Count; i++) {
 					var localTime = m_localTimes[i];
 					if (localTime.Player.ID == player.m_localPlayer.ID) {
@@ -62,7 +64,12 @@ namespace Nimania.Plugins
 							localTime.Save();
 							SortTimes(); //TODO: Get rid of this and move the element around ourselves
 							int n = m_localTimes.IndexOf(localTime);
-							SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
+							if (n != i) {
+								SendChat(string.Format(m_config["Messages.Locals.TimeImprovedGained"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
+							} else {
+								SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
+							}
+							updated = true;
 						}
 						break;
 					}
@@ -96,11 +103,15 @@ namespace Nimania.Plugins
 						if (m_localTimes.Count > maxCount) {
 							m_localTimes.RemoveRange(maxCount, m_localTimes.Count - maxCount);
 						}
+
+						updated = true;
 					}
 				}
 			}
 
-			SendWidget();
+			if (updated) {
+				SendWidget();
+			}
 		}
 
 		public void ReloadMapInfo()

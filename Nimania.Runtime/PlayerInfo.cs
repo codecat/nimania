@@ -18,6 +18,7 @@ namespace Nimania.Runtime
 		public int m_ladder;
 
 		public List<int> m_checkpoints = new List<int>();
+		public List<int> m_bestCheckpoints = new List<int>();
 		public int m_prevBestTime = -1;
 		public int m_bestTime = -1;
 		public int m_lastTime = -1;

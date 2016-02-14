@@ -106,6 +106,17 @@ namespace Nimania.Runtime
 			}
 		}
 
+		public void OnEndChallenge()
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnEndChallenge();
+					});
+				}
+			}
+		}
+
 		public void OnPlayerConnect(PlayerInfo player)
 		{
 			lock (m_plugins) {

@@ -33,7 +33,7 @@ namespace Nimania.Plugins
 
 		public override void OnAction(PlayerInfo player, string action)
 		{
-			if (!player.m_localPlayer.Group.IsDeveloper) {
+			if (!player.m_localPlayer.Group.IsAdmin) {
 				Console.WriteLine("User " + player.m_login + " tried accessing admin controls, not allowed!");
 				return;
 			}

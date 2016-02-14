@@ -26,6 +26,7 @@ namespace Nimania.Runtime
 		public virtual void OnAction(PlayerInfo player, string action) { }
 
 		public virtual void OnBeginChallenge() { }
+		public virtual void OnEndChallenge() { }
 
 		public virtual void OnPlayerConnect(PlayerInfo player) { }
 		public virtual void OnPlayerDisconnect(PlayerInfo player) { }

@@ -15,5 +15,7 @@ namespace Nimania.Runtime.DbModels
 		public string Name;
 		public string Author;
 		public string FileName;
+
+		public int m_nCheckpoints;
 	}
 }
