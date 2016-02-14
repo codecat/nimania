@@ -19,6 +19,11 @@ namespace Nimania.Plugins
 		{
 		}
 
+		public override void OnBeginChallenge()
+		{
+			SendWidget();
+		}
+
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			SendWidget(player.m_login);
@@ -26,7 +31,9 @@ namespace Nimania.Plugins
 
 		public override void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints)
 		{
-			SendWidget();
+			if (time < player.m_prevBestTime || player.m_prevBestTime == -1) {
+				SendWidget();
+			}
 		}
 
 		public void SendWidget(string login = "")

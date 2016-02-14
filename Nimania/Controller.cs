@@ -158,10 +158,35 @@ namespace Nimania
 						m_game.m_players.Add(LoadPlayerInfo(player));
 					}
 				}, 255, 0, 0).Wait();
+
+				m_remote.Query("GetCurrentRanking", (GbxResponse res) => {
+					var players = res.m_value.Get<ArrayList>();
+					foreach (GbxValue player in players) {
+						int id = player.Get<int>("PlayerId");
+
+						var ply = m_game.GetPlayer(id);
+						ply.m_bestTime = player.Get<int>("BestTime");
+						ply.m_prevBestTime = ply.m_bestTime;
+						ply.m_lastTime = ply.m_bestTime;
+						ply.m_score = player.Get<int>("Score");
+
+						var cps = player.Get<ArrayList>("BestCheckpoints");
+						foreach (GbxValue cp in cps) {
+							ply.m_checkpoints.Add(cp.Get<int>());
+						}
+					}
+				}, 255, 0).Wait();
 			}
 
 			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
 				m_game.m_currentMap = LoadMapInfo(cb.m_params[0]);
+				lock (m_game.m_players) {
+					foreach (var player in m_game.m_players) {
+						player.m_prevBestTime = -1;
+						player.m_bestTime = -1;
+						player.m_lastTime = -1;
+					}
+				}
 				m_plugins.OnBeginChallenge();
 			});
 
@@ -238,7 +263,8 @@ namespace Nimania
 					return;
 				}
 
-				if (time < player.m_bestTime) {
+				if (time < player.m_bestTime || player.m_bestTime == -1) {
+					player.m_prevBestTime = player.m_bestTime;
 					player.m_bestTime = time;
 				}
 				player.m_lastTime = time;
