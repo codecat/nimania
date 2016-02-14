@@ -39,14 +39,14 @@ namespace Nimania.Plugins
 						if (localTime.Player.ID == player.m_localPlayer.ID) {
 							hadTime = true;
 							if (time == localTime.Time) {
-								m_remote.Execute("ChatSendServerMessage", string.Format(m_config["Messages.Locals.TimeEqualed"], player.m_nickname, i + 1, Utils.TimeString(time)));
+								SendChat(string.Format(m_config["Messages.Locals.TimeEqualed"], player.m_nickname, i + 1, Utils.TimeString(time)));
 							} else if (time < localTime.Time) {
 								int diff = localTime.Time - time;
 								localTime.Time = time;
 								localTime.Save();
 								SortTimes(); //TODO: Get rid of this and move the element around ourselves
 								int n = m_localTimes.IndexOf(localTime);
-								m_remote.Execute("ChatSendServerMessage", string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
+								SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
 							}
 							break;
 						}
@@ -75,7 +75,7 @@ namespace Nimania.Plugins
 							newTime.Checkpoints = "";
 							newTime.Save();
 							m_localTimes.Insert(insertBefore, newTime);
-							m_remote.Execute("ChatSendServerMessage", string.Format(m_config["Messages.Locals.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
+							SendChat(string.Format(m_config["Messages.Locals.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
 
 							if (m_localTimes.Count > maxCount) {
 								m_localTimes.RemoveRange(maxCount, m_localTimes.Count - maxCount);
@@ -112,9 +112,9 @@ namespace Nimania.Plugins
 			ReloadMapInfo();
 		}
 
-		public override void OnPlayerConnect(string login)
+		public override void OnPlayerConnect(PlayerInfo player)
 		{
-			SendWidget(login);
+			SendWidget(player.m_login);
 		}
 
 		public void ReloadMapInfo()
@@ -128,7 +128,7 @@ namespace Nimania.Plugins
 					m_sort = true,
 					m_sortKey = "Time"
 				}));
-				m_remote.Execute("ChatSendServerMessage", "$f00" + m_localTimes.Count + "$fff local times on this map");
+				SendChat("$f00" + m_localTimes.Count + "$fff local times on this map");
 			}
 
 			SendWidget();

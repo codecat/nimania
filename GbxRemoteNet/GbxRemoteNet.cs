@@ -18,6 +18,9 @@ namespace GbxRemoteNet
 		public const string DateTimeFormat = "yyyyMMdd\tHH:mm:ss";
 		public static CultureInfo Culture = new CultureInfo("en-US");
 
+		static Mutex m_logMutex = new Mutex();
+		Mutex m_writeMutex = new Mutex();
+
 		string m_connectHost;
 		int m_connectPort;
 
@@ -64,9 +67,11 @@ namespace GbxRemoteNet
 
 		internal static void FatalError(string str)
 		{
+			m_logMutex.WaitOne();
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("[FATAL] " + str);
 			Console.ForegroundColor = ConsoleColor.Gray;
+			m_logMutex.ReleaseMutex();
 		}
 
 		internal static void PrintError(string str)
@@ -74,9 +79,11 @@ namespace GbxRemoteNet
 			if (!ReportError) {
 				return;
 			}
+			m_logMutex.WaitOne();
 			Console.ForegroundColor = ConsoleColor.Red;
 			Console.WriteLine("[ERR] " + str);
 			Console.ForegroundColor = ConsoleColor.Gray;
+			m_logMutex.ReleaseMutex();
 		}
 
 		internal static void PrintDebug(string str)
@@ -84,16 +91,18 @@ namespace GbxRemoteNet
 			if (!ReportDebug) {
 				return;
 			}
-			Console.ForegroundColor = ConsoleColor.Cyan;
+			m_logMutex.WaitOne();
 			Console.WriteLine("[DBG] " + str);
-			Console.ForegroundColor = ConsoleColor.Gray;
+			m_logMutex.ReleaseMutex();
 		}
 
 		internal static void PrintInfo(string str)
 		{
+			m_logMutex.WaitOne();
 			Console.ForegroundColor = ConsoleColor.White;
 			Console.WriteLine("[INF] " + str);
 			Console.ForegroundColor = ConsoleColor.Gray;
+			m_logMutex.ReleaseMutex();
 		}
 
 		private void ReadLoop()
@@ -253,9 +262,11 @@ namespace GbxRemoteNet
 
 		public void WriteMessage(string strXml, uint handle)
 		{
+			m_writeMutex.WaitOne();
 			m_writer.Write((uint)strXml.Length);
 			m_writer.Write(handle);
 			m_writer.WriteStringBytes(strXml);
+			m_writeMutex.ReleaseMutex();
 		}
 
 		public void GenerateDocumentation(string filename)

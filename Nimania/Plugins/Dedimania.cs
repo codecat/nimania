@@ -201,7 +201,7 @@ namespace Nimania.Plugins
 			}
 
 			var dediRes = m_api.GetChallengeRecords(m_apiSession, dmi, m_game.m_serverGameMode == 1 ? "Rounds" : "TA", dsi, plys.ToArray());
-			m_remote.Execute("ChatSendServerMessage", "$f00" + dediRes.Records.Length + "$fff dedimania times on this map");
+			SendChat("$f00" + dediRes.Records.Length + "$fff dedimania times on this map");
 		}
 	}
 }

@@ -119,12 +119,17 @@ namespace Nimania
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
+				int id = cb.m_params[0].Get<int>();
 				string login = cb.m_params[1].Get<string>();
 				string message = cb.m_params[2].Get<string>();
 				if (login == "ansjh") {
 					switch (message) {
 						case "/reload": Reload(); break;
 						case "/shutdown": Shutdown(); break;
+						case "/playtime":
+							var pi = m_game.GetPlayer(id);
+							m_remote.Execute("ChatSendServerMessageToId", "$fffYou have played for: $666" + Utils.TimeStringHMS((int)(DateTime.Now - pi.m_joinTime).TotalSeconds), id);
+							break;
 					}
 				}
 			});
@@ -162,10 +167,11 @@ namespace Nimania
 			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxCallback cb) => {
 				string login = cb.m_params[0].Get<string>();
 				m_remote.Query("GetPlayerInfo", (GbxResponse res) => {
+					var playerInfo = LoadPlayerInfo(res.m_value);
 					lock (m_game.m_players) {
-						m_game.m_players.Add(LoadPlayerInfo(res.m_value));
+						m_game.m_players.Add(playerInfo);
 					}
-					m_plugins.OnPlayerConnect(login);
+					m_plugins.OnPlayerConnect(playerInfo);
 				}, login);
 			});
 
@@ -185,6 +191,10 @@ namespace Nimania
 
 			m_remote.AddCallback("TrackMania.PlayerDisconnect", (GbxCallback cb) => {
 				string login = cb.m_params[0].Get<string>();
+				var player = m_game.GetPlayer(login);
+				if (player != null) {
+					m_plugins.OnPlayerDisconect(player);
+				}
 				lock (m_game.m_players) {
 					for (int i = 0; i < m_game.m_players.Count; i++) {
 						if (m_game.m_players[i].m_login == login) {
@@ -205,8 +215,10 @@ namespace Nimania
 			player.m_spectating = val.Get<bool>("IsSpectator");
 			player.m_officialMode = val.Get<bool>("IsInOfficialMode");
 			player.m_ladder = val.Get<int>("LadderRanking");
-			player.m_localPlayer = m_database.FindByAttributes<LocalPlayer>("Login", player.m_login);
 
+			player.m_joinTime = DateTime.Now;
+
+			player.m_localPlayer = m_database.FindByAttributes<LocalPlayer>("Login", player.m_login);
 			if (player.m_localPlayer == null) {
 				player.m_localPlayer = m_database.Create<LocalPlayer>();
 				player.m_localPlayer.Login = player.m_login;

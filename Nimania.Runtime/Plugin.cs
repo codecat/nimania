@@ -17,16 +17,14 @@ namespace Nimania.Runtime
 
 		public GameInfo m_game;
 
+		public static Random m_random = new Random();
+
 		public abstract void Initialize();
 		public abstract void Uninitialize();
 		public virtual void OnAction(string login, string action) { }
 		public virtual void OnBeginChallenge() { }
-		public virtual void OnPlayerConnect(string login) { }
-
-		public void SendChat(string s)
-		{
-			m_remote.Execute("ChatSendServerMessage", s);
-		}
+		public virtual void OnPlayerConnect(PlayerInfo player) { }
+		public virtual void OnPlayerDisconnect(PlayerInfo player) { }
 
 		public void SendView(string file, params string[] kvs) { SendView(file, 0, false, kvs); }
 		public void SendView(string file, int timeout, params string[] kvs) { SendView(file, timeout, false, kvs); }
@@ -42,6 +40,21 @@ namespace Nimania.Runtime
 		{
 			string xml = GetView(file, kvs);
 			m_remote.Execute("SendDisplayManialinkPageToLogin", login, xml, timeout, clickHides);
+		}
+
+		public void SendChat(string s)
+		{
+			m_remote.Execute("ChatSendServerMessage", s);
+		}
+
+		public void SendChatTo(string login, string text)
+		{
+			m_remote.Execute("ChatSendServerMessageToLogin", text, login);
+		}
+
+		public void SendChatTo(int id, string text)
+		{
+			m_remote.Execute("ChatSendServerMessageToId", text, id);
 		}
 
 		public string GetView(string file, params string[] kvs)

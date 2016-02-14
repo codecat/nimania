@@ -14,6 +14,7 @@ namespace Nimania.Runtime.DbModels
 		public int ID;
 		public string Login;
 		public string Nickname;
+		public int Visits;
 
 		public string StrippedNickname
 		{

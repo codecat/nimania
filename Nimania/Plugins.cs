@@ -35,6 +35,7 @@ namespace Nimania.Runtime
 				case "Locals": newPlugin = new Locals(); break;
 				case "Dedimania": newPlugin = new Dedimania(); break;
 				case "Checkpoints": newPlugin = new Checkpoints(); break;
+				case "Greeter": newPlugin = new Greeter(); break;
 			}
 
 			if (newPlugin == null) {
@@ -59,11 +60,15 @@ namespace Nimania.Runtime
 
 		public void Initialize()
 		{
-			//TODO: Initialize plugins simultaneously and use tasks to wait for them to complete
-			//TODO: Before you do that, make sure that GbxRemoteNet is thread-safe.. it's probably not.
+			var tasks = new List<Task>();
 			foreach (var plugin in m_plugins) {
-				plugin.Initialize();
+				tasks.Add(Task.Factory.StartNew(() => {
+					plugin.Initialize();
+				}));
 			}
+			Console.WriteLine("Waiting for Initializing tasks to complete");
+			Task.WaitAll(tasks.ToArray());
+			Console.WriteLine("Done!");
 			m_initialized = true;
 		}
 
@@ -100,15 +105,28 @@ namespace Nimania.Runtime
 			}
 		}
 
-		public void OnPlayerConnect(string login)
+		public void OnPlayerConnect(PlayerInfo player)
 		{
 			lock (m_plugins) {
 				foreach (var plugin in m_plugins) {
 					Task.Factory.StartNew(() => {
-						plugin.OnPlayerConnect(login);
+						plugin.OnPlayerConnect(player);
 					});
 				}
 			}
+		}
+
+		public void OnPlayerDisconect(PlayerInfo player)
+		{
+			var tasks = new List<Task>();
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					tasks.Add(Task.Factory.StartNew(() => {
+						plugin.OnPlayerDisconnect(player);
+					}));
+				}
+			}
+			Task.WaitAll(tasks.ToArray());
 		}
 	}
 }

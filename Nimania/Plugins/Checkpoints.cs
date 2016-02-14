@@ -68,9 +68,9 @@ namespace Nimania.Plugins
 			});
 		}
 
-		public override void OnPlayerConnect(string login)
+		public override void OnPlayerConnect(PlayerInfo player)
 		{
-			SendWidget(login);
+			SendWidget(player.m_login);
 		}
 
 		void SendWidget(string login = "")

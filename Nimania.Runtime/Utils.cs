@@ -11,13 +11,25 @@ namespace Nimania.Runtime
 		public static string TimeString(int tm)
 		{
 			int ms = tm % 1000;
-			int s = (int)Math.Floor(tm / 1000.0) % 60;
-			int m = (int)Math.Floor(tm / 1000.0 / 60.0) % 60;
-			int h = (int)Math.Floor(tm / 1000.0 / 60.0 / 60.0);
+			int s = (tm / 1000) % 60;
+			int m = (tm / 1000 / 60) % 60;
+			int h = (tm / 1000 / 60 / 60);
 			string ret = "";
 			if (h > 0) { ret += h + ":"; }
-			if (m > 0) { ret += m.ToString(h > 0 ? "00" : "0") + ":"; }
+			if (h > 0 || m > 0) { ret += m.ToString(h > 0 ? "00" : "0") + ":"; }
 			ret += s.ToString(m > 0 ? "00" : "0") + "." + ms.ToString("000");
+			return ret;
+		}
+
+		public static string TimeStringHMS(int tm)
+		{
+			int s = tm % 60;
+			int m = (tm / 60) % 60;
+			int h = (tm / 60 / 60);
+			string ret = "";
+			if (h > 0) { ret += h + "h "; }
+			if (h > 0 || m > 0) { ret += m + "m "; }
+			ret += s + "s";
 			return ret;
 		}
 

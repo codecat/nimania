@@ -17,6 +17,8 @@ namespace Nimania.Runtime
 		public bool m_officialMode;
 		public int m_ladder;
 
+		public DateTime m_joinTime;
+
 		public LocalPlayer m_localPlayer;
 	}
 }
