@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ namespace Nimania.Plugins
 	public class Checkpoints : Plugin
 	{
 		public List<BestCp> m_cps = new List<BestCp>();
+		public int m_cpCount = -1;
 
 		public override void Initialize()
 		{
@@ -27,12 +29,12 @@ namespace Nimania.Plugins
 
 				var player = m_game.GetPlayer(id);
 				if (player == null) {
-					// ???
+					Debug.Assert(false);
 					return;
 				}
 
 				if (n + 1 > m_cps.Count) {
-					if (m_cps.Count == n) {
+					if (m_cps.Count == n && n != m_cpCount - 1) {
 						m_cps.Add(new BestCp() {
 							m_player = player,
 							m_time = time
@@ -49,7 +51,7 @@ namespace Nimania.Plugins
 				SendWidget();
 			});
 
-			SendWidget();
+			OnBeginChallenge();
 		}
 
 		public override void Uninitialize()
@@ -58,8 +60,12 @@ namespace Nimania.Plugins
 
 		public override void OnBeginChallenge()
 		{
-			m_cps.Clear();
-			SendWidget();
+			m_remote.Query("GetCurrentChallengeInfo", (GbxResponse res) => {
+				m_cpCount = res.m_value.Get<int>("NbCheckpoints");
+
+				m_cps.Clear();
+				SendWidget();
+			});
 		}
 
 		public override void OnPlayerConnect(string login)
@@ -72,9 +78,11 @@ namespace Nimania.Plugins
 			string xmlCps = "";
 			for (int i = 0; i < m_cps.Count; i++) {
 				var cp = m_cps[i];
+				int x = (i % 7) * 31;
+				int y = (i / 7) * -7;
 				xmlCps += GetView("Checkpoints/Cp.xml",
-					"x", (i * 31).ToString(),
-					"y", "0",
+					"x", x.ToString(),
+					"y", y.ToString(),
 					"n", (i + 1).ToString(),
 					"time", Utils.TimeString(cp.m_time),
 					"name", Utils.XmlEntities(cp.m_player.m_nickname));
