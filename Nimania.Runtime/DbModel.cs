@@ -26,7 +26,11 @@ namespace Nimania.Runtime
 					v = int.Parse(row[columnName]);
 				} else if (field.FieldType == typeof(string)) {
 					v = row[columnName];
+				} else if (field.FieldType == typeof(bool)) {
+					v = (row[columnName] != "0");
 				} else {
+					//TODO: Deal with recursive relations
+					//TODO: Deal with performance (we can cache relations fetched by Pk, such as LocalPlayerGroup)
 					if (field.FieldType.BaseType == typeof(DbModel)) {
 						v = m_database.FindByPk(int.Parse(row[columnName]), field.FieldType);
 					} else {

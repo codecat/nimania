@@ -23,7 +23,7 @@ namespace Nimania.Runtime
 		public abstract void Uninitialize();
 
 		// Synced callbacks
-		public virtual void OnAction(string login, string action) { }
+		public virtual void OnAction(PlayerInfo player, string action) { }
 
 		public virtual void OnBeginChallenge() { }
 

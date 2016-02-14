@@ -99,6 +99,7 @@ namespace Nimania
 			m_game = new GameInfo();
 
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
+				int id = cb.m_params[0].Get<int>();
 				string login = cb.m_params[1].Get<string>();
 				string action = cb.m_params[2].Get<string>();
 
@@ -116,7 +117,13 @@ namespace Nimania
 					return;
 				}
 
-				plugin.OnAction(login, parse[1]);
+				var player = m_game.GetPlayer(id);
+				if (player == null) {
+					Debug.Assert(false);
+					return;
+				}
+
+				plugin.OnAction(player, parse[1]);
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {

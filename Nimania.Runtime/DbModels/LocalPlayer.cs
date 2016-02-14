@@ -14,22 +14,10 @@ namespace Nimania.Runtime.DbModels
 		public int ID;
 		public string Login;
 		public string Nickname;
+		public LocalPlayerGroup Group;
 		public int Visits;
 
-		public string StrippedNickname
-		{
-			get
-			{
-				return Regex.Replace(Nickname, "\\$([0-9a-f]{3}|[ibnwsz<>]|[lh](\\[[^\\]]+\\])?)", "");
-			}
-		}
-
-		public string NoLinkNickname
-		{
-			get
-			{
-				return Regex.Replace(Nickname, "\\$([lh](\\[[^\\]]+\\])?)", "");
-			}
-		}
+		public string StrippedNickname { get { return Utils.StripFormatCodes(Nickname); } }
+		public string NoLinkNickname { get { return Utils.StripLinkCodes(Nickname); } }
 	}
 }

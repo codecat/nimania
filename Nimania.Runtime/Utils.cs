@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Nimania.Runtime
@@ -56,6 +57,16 @@ namespace Nimania.Runtime
 				}
 			}
 			return sb.ToString();
+		}
+
+		public static string StripFormatCodes(string s)
+		{
+			return Regex.Replace(s, "\\$([0-9a-f]{3}|[ionwsz<>]|[lh](\\[[^\\]]+\\])?)", "");
+		}
+
+		public static string StripLinkCodes(string s)
+		{
+			return Regex.Replace(s, "\\$([lh](\\[[^\\]]+\\])?)", "");
 		}
 	}
 }

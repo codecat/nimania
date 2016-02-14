@@ -48,6 +48,7 @@
     <Compile Include="DbDriver.cs" />
     <Compile Include="DbDrivers\Mysql.cs" />
     <Compile Include="DbModel.cs" />
+    <Compile Include="DbModels\LocalPlayerGroup.cs" />
     <Compile Include="DbModels\LocalTime.cs" />
     <Compile Include="DbModels\Map.cs" />
     <Compile Include="DbModels\LocalPlayer.cs" />

@@ -11,17 +11,30 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			SendViewToLogin("ansjh", "Developer/Bar.xml");
+			lock (m_game.m_players) {
+				foreach (var player in m_game.m_players) {
+					if (player.m_localPlayer.Group.IsDeveloper) {
+						SendViewToLogin(player.m_login, "Developer/Bar.xml");
+					}
+				}
+			}
 		}
 
 		public override void Uninitialize()
 		{
 		}
 
-		public override void OnAction(string login, string action)
+		public override void OnPlayerConnect(PlayerInfo player)
 		{
-			//TODO: Tie to database of sorts
-			if (login != "ansjh") {
+			if (player.m_localPlayer.Group.IsDeveloper) {
+				SendViewToLogin(player.m_login, "Developer/Bar.xml");
+			}
+		}
+
+		public override void OnAction(PlayerInfo player, string action)
+		{
+			if (!player.m_localPlayer.Group.IsDeveloper) {
+				Console.WriteLine("User " + player.m_login + " tried accessing developer controls, not allowed!");
 				return;
 			}
 			switch (action) {
