@@ -12,12 +12,14 @@ namespace Nimania.Runtime
 		internal Dictionary<string, object> m_originalData = new Dictionary<string, object>();
 
 		public bool m_loaded = false;
+		public bool m_loadedRelations = false;
 
 		internal void LoadRow(Dictionary<string, string> row)
 		{
 			m_originalData.Clear();
+			var type = GetType();
 			foreach (var columnName in row.Keys) {
-				var field = GetType().GetField(columnName);
+				var field = type.GetField(columnName);
 				if (field == null) {
 					continue;
 				}
@@ -29,11 +31,7 @@ namespace Nimania.Runtime
 				} else if (field.FieldType == typeof(bool)) {
 					v = (row[columnName] != "0");
 				} else {
-					//TODO: Deal with recursive relations
-					//TODO: Deal with performance (we can cache relations fetched by Pk, such as LocalPlayerGroup)
-					if (field.FieldType.BaseType == typeof(DbModel)) {
-						v = m_database.FindByPk(int.Parse(row[columnName]), field.FieldType);
-					} else {
+					if (field.FieldType.BaseType != typeof(DbModel)) {
 						throw new Exception("Unknown column/field type: " + field.FieldType.Name + " for column '" + columnName + "'");
 					}
 				}
@@ -41,6 +39,24 @@ namespace Nimania.Runtime
 				m_originalData[columnName] = v;
 			}
 			m_loaded = true;
+		}
+
+		internal void LoadRelations(Dictionary<string, string> row)
+		{
+			var type = GetType();
+			foreach (var columnName in row.Keys) {
+				var field = type.GetField(columnName);
+				if (field == null) {
+					continue;
+				}
+				if (field.FieldType.BaseType != typeof(DbModel)) {
+					continue;
+				}
+				var model = m_database.FindByPk(int.Parse(row[columnName]), field.FieldType);
+				field.SetValue(this, model);
+				m_originalData[columnName] = model;
+			}
+			m_loadedRelations = true;
 		}
 
 		internal void ResetDirty()

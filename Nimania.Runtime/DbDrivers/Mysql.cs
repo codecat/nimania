@@ -156,9 +156,11 @@ namespace Nimania.Runtime.DbDrivers
 			if (rows.Length != 1) {
 				return null;
 			}
+			var row = rows[0];
 			DbModel ret = Create(type);
-			ret.LoadRow(rows[0]);
+			ret.LoadRow(row);
 			AddCache(tablename, id, ret);
+			ret.LoadRelations(row);
 			return ret;
 		}
 
@@ -211,17 +213,19 @@ namespace Nimania.Runtime.DbDrivers
 			if (rows.Length != 1) {
 				return default(T);
 			}
+			var row = rows[0];
 
 			string primaryKey = PrimaryKey<T>();
-			int pk = int.Parse(rows[0][primaryKey]);
+			int pk = int.Parse(row[primaryKey]);
 			var cachedModel = FindCache(tablename, pk);
 			if (cachedModel != null) {
 				return (T)(object)cachedModel;
 			}
 
 			var newModel = (DbModel)(object)Create<T>();
-			newModel.LoadRow(rows[0]);
+			newModel.LoadRow(row);
 			AddCache(tablename, pk, newModel);
+			newModel.LoadRelations(row);
 			return (T)(object)newModel;
 		}
 
@@ -251,6 +255,7 @@ namespace Nimania.Runtime.DbDrivers
 				var newModel = (DbModel)(object)Create<T>();
 				newModel.LoadRow(row);
 				AddCache(tablename, pk, newModel);
+				newModel.LoadRelations(row);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;
@@ -280,8 +285,9 @@ namespace Nimania.Runtime.DbDrivers
 				}
 
 				var newModel = (DbModel)(object)Create<T>();
-				newModel.LoadRow(rows[i]);
+				newModel.LoadRow(row);
 				AddCache(tablename, pk, newModel);
+				newModel.LoadRelations(row);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;
