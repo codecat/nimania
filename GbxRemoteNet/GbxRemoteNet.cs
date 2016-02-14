@@ -221,8 +221,6 @@ namespace GbxRemoteNet
 			string strXml = GbxEncode.Encode(strMethod, args, true);
 			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
 
-			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
-
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;
 			}
@@ -245,12 +243,60 @@ namespace GbxRemoteNet
 			return ret;
 		}
 
+		public class MultiCall : GbxStruct
+		{
+			[GbxStructName("methodName")]
+			public string m_methodName;
+
+			[GbxStructName("params")]
+			public string[] m_methodParams;
+		}
+
+		public GbxRequest MultiQuery(Action<GbxResponse[]> callback, params MultiCall[] methods)
+		{
+			return Query("system.multicall", (GbxResponse res) => {
+				var ret = new List<GbxResponse>();
+				var results = res.m_value.Get<ArrayList>();
+				foreach (GbxValue result in results) {
+					if (result.m_type == GbxValueType.Struct) {
+						ret.Add(null);
+						continue;
+					}
+					ret.Add(new GbxResponse() {
+						m_value = (GbxValue)result.Get<ArrayList>()[0]
+					});
+				}
+				callback(ret.ToArray());
+			}, new dynamic[] { methods });
+		}
+
+		public GbxResponse[] MultiQueryWait(params string[] methods)
+		{
+			MultiCall[] arr = new MultiCall[methods.Length];
+			for (int i = 0; i < methods.Length; i++) {
+				arr[i] = new MultiCall() {
+					m_methodName = methods[i],
+					m_methodParams = new string[0]
+				};
+			}
+			return MultiQueryWait(arr);
+		}
+
+		public GbxResponse[] MultiQueryWait(params MultiCall[] methods)
+		{
+			var ret = new List<GbxResponse>();
+			MultiQuery((GbxResponse[] results) => {
+				foreach (var res in results) {
+					ret.Add(res);
+				}
+			}, methods).Wait();
+			return ret.ToArray();
+		}
+
 		public void Execute(string strMethod, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
 			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
-
-			//TODO: MAX_REQUEST_SIZE and "multicall".. I'm lazy tonight :)
 
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;
@@ -470,6 +516,7 @@ namespace GbxRemoteNet
 		}
 	}
 
+	//TODO: Remove this class and just return GbxValue's as responses?
 	public class GbxResponse
 	{
 		public GbxValue m_value;
@@ -526,9 +573,15 @@ namespace GbxRemoteNet
 			} else if (arg is GbxStruct) {
 				string ret = "<struct>";
 				Type type = arg.GetType();
-				var props = type.GetProperties();
-				foreach (var prop in props) {
-					ret += "<member><name>" + Escape(prop.Name, bEscape) + "</name><value>" + EncodeValue(prop.GetValue(arg, null)) + "</value></member>";
+				var fields = type.GetFields();
+				foreach (var field in fields) {
+					string name = field.Name;
+					var attrs = field.GetCustomAttributes(typeof(GbxStructNameAttribute), false);
+					if (attrs.Length > 0) {
+						var attr = (GbxStructNameAttribute)attrs[0];
+						name = attr.m_name;
+					}
+					ret += "<member><name>" + Escape(name, bEscape) + "</name><value>" + EncodeValue(field.GetValue(arg)) + "</value></member>";
 				}
 				return ret + "</struct>";
 			}
@@ -572,6 +625,16 @@ namespace GbxRemoteNet
 	}
 
 	public abstract class GbxStruct { }
+
+	public class GbxStructNameAttribute : Attribute
+	{
+		public string m_name;
+
+		public GbxStructNameAttribute(string name)
+		{
+			m_name = name;
+		}
+	}
 
 	public class Base64String
 	{
