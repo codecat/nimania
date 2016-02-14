@@ -53,6 +53,7 @@
     <Compile Include="Plugins\Dedimania.cs" />
     <Compile Include="Plugins\Developer.cs" />
     <Compile Include="Plugins\Greeter.cs" />
+    <Compile Include="Plugins\Live.cs" />
     <Compile Include="Plugins\Locals.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

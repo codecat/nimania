@@ -17,6 +17,10 @@ namespace Nimania.Runtime
 		public bool m_officialMode;
 		public int m_ladder;
 
+		public List<int> m_checkpoints = new List<int>();
+		public int m_bestTime = -1;
+		public int m_lastTime = -1;
+
 		public DateTime m_joinTime;
 
 		public LocalPlayer m_localPlayer;

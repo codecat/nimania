@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manialink version="2" id="LiveWidget">
+	<frame posn="160 -15">
+		<quad sizen="45 45" bgcolor="4447" halign="right" />
+		<quad sizen="45 4" bgcolor="6447" halign="right" />
+		<label posn="-0.5 -0.5" text="Live Records" style="TextCardSmallScores2" halign="right" />
+
+		<frame posn="-45 -4">
+			<?=items?>
+		</frame>
+	</frame>
+</manialink>

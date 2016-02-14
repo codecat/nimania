@@ -22,35 +22,6 @@ namespace Nimania.Plugins
 
 		public override void Initialize()
 		{
-			m_remote.AddCallback("TrackMania.PlayerCheckpoint", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				int time = cb.m_params[2].Get<int>();
-				int n = cb.m_params[4].Get<int>();
-
-				var player = m_game.GetPlayer(id);
-				if (player == null) {
-					Debug.Assert(false);
-					return;
-				}
-
-				if (n + 1 > m_cps.Count) {
-					if (m_cps.Count == n && n != m_cpCount - 1) {
-						m_cps.Add(new BestCp() {
-							m_player = player,
-							m_time = time
-						});
-					}
-				} else {
-					var cp = m_cps[n];
-					if (time < cp.m_time) {
-						cp.m_player = player;
-						cp.m_time = time;
-					}
-				}
-
-				SendWidget();
-			});
-
 			OnBeginChallenge();
 		}
 
@@ -71,6 +42,26 @@ namespace Nimania.Plugins
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			SendWidget(player.m_login);
+		}
+
+		public override void OnPlayerCheckpoint(PlayerInfo player, int n, int time)
+		{
+			if (n + 1 > m_cps.Count) {
+				if (m_cps.Count == n && n != m_cpCount - 1) {
+					m_cps.Add(new BestCp() {
+						m_player = player,
+						m_time = time
+					});
+				}
+			} else {
+				var cp = m_cps[n];
+				if (time < cp.m_time) {
+					cp.m_player = player;
+					cp.m_time = time;
+				}
+			}
+
+			SendWidget();
 		}
 
 		void SendWidget(string login = "")

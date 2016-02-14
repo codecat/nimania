@@ -117,10 +117,6 @@ namespace Nimania.Plugins
 
 		public override void Initialize()
 		{
-			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxCallback cb) => {
-				//TODO..
-			});
-
 			string serverPath = m_remote.QueryWait("GetDetailedPlayerInfo", m_config["Server.Login"]).m_value.Get<string>("Path");
 			string serverPackmask = m_remote.QueryWait("GetServerPackMask").m_value.Get<string>();
 

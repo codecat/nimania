@@ -15,78 +15,6 @@ namespace Nimania.Plugins
 
 		public override void Initialize()
 		{
-			//TODO: Make an abstraction layer for checkpoints/finishing?
-			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxCallback cb) => {
-				int playerId = cb.m_params[0].Get<int>();
-				int time = cb.m_params[2].Get<int>();
-
-				// time is 0 on respawning
-				if (time == 0) {
-					return;
-				}
-
-				var player = m_game.GetPlayer(playerId);
-				if (player == null) {
-					// ???
-					return;
-				}
-
-				bool hadTime = false;
-
-				lock (m_localTimes) {
-					for (int i = 0; i < m_localTimes.Count; i++) {
-						var localTime = m_localTimes[i];
-						if (localTime.Player.ID == player.m_localPlayer.ID) {
-							hadTime = true;
-							if (time == localTime.Time) {
-								SendChat(string.Format(m_config["Messages.Locals.TimeEqualed"], player.m_nickname, i + 1, Utils.TimeString(time)));
-							} else if (time < localTime.Time) {
-								int diff = localTime.Time - time;
-								localTime.Time = time;
-								localTime.Save();
-								SortTimes(); //TODO: Get rid of this and move the element around ourselves
-								int n = m_localTimes.IndexOf(localTime);
-								SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
-							}
-							break;
-						}
-					}
-
-					if (!hadTime) {
-						int maxCount = m_config.GetInt("Plugin_Locals.MaxTimes");
-						int insertBefore = -1;
-						int count = Math.Min(m_localTimes.Count, maxCount);
-						for (int i = 0; i < count; i++) {
-							if (time < m_localTimes[i].Time) {
-								insertBefore = i;
-								break;
-							}
-						}
-
-						if (insertBefore == -1 && count < maxCount) {
-							insertBefore = m_localTimes.Count;
-						}
-
-						if (insertBefore != -1) {
-							var newTime = m_database.Create<LocalTime>();
-							newTime.Map = m_game.m_currentMap;
-							newTime.Player = player.m_localPlayer;
-							newTime.Time = time;
-							newTime.Checkpoints = "";
-							newTime.Save();
-							m_localTimes.Insert(insertBefore, newTime);
-							SendChat(string.Format(m_config["Messages.Locals.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
-
-							if (m_localTimes.Count > maxCount) {
-								m_localTimes.RemoveRange(maxCount, m_localTimes.Count - maxCount);
-							}
-						}
-					}
-				}
-
-				SendWidget();
-			});
-
 			ReloadMapInfo();
 		}
 
@@ -115,6 +43,64 @@ namespace Nimania.Plugins
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			SendWidget(player.m_login);
+		}
+
+		public override void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints)
+		{
+			bool hadTime = false;
+
+			lock (m_localTimes) {
+				for (int i = 0; i < m_localTimes.Count; i++) {
+					var localTime = m_localTimes[i];
+					if (localTime.Player.ID == player.m_localPlayer.ID) {
+						hadTime = true;
+						if (time == localTime.Time) {
+							SendChat(string.Format(m_config["Messages.Locals.TimeEqualed"], player.m_nickname, i + 1, Utils.TimeString(time)));
+						} else if (time < localTime.Time) {
+							int diff = localTime.Time - time;
+							localTime.Time = time;
+							localTime.Save();
+							SortTimes(); //TODO: Get rid of this and move the element around ourselves
+							int n = m_localTimes.IndexOf(localTime);
+							SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
+						}
+						break;
+					}
+				}
+
+				if (!hadTime) {
+					int maxCount = m_config.GetInt("Plugin_Locals.MaxTimes");
+					int insertBefore = -1;
+					int count = Math.Min(m_localTimes.Count, maxCount);
+					for (int i = 0; i < count; i++) {
+						if (time < m_localTimes[i].Time) {
+							insertBefore = i;
+							break;
+						}
+					}
+
+					if (insertBefore == -1 && count < maxCount) {
+						insertBefore = m_localTimes.Count;
+					}
+
+					if (insertBefore != -1) {
+						var newTime = m_database.Create<LocalTime>();
+						newTime.Map = m_game.m_currentMap;
+						newTime.Player = player.m_localPlayer;
+						newTime.Time = time;
+						newTime.Checkpoints = "";
+						newTime.Save();
+						m_localTimes.Insert(insertBefore, newTime);
+						SendChat(string.Format(m_config["Messages.Locals.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
+
+						if (m_localTimes.Count > maxCount) {
+							m_localTimes.RemoveRange(maxCount, m_localTimes.Count - maxCount);
+						}
+					}
+				}
+			}
+
+			SendWidget();
 		}
 
 		public void ReloadMapInfo()

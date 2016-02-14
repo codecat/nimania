@@ -36,6 +36,7 @@ namespace Nimania.Runtime
 				case "Dedimania": newPlugin = new Dedimania(); break;
 				case "Checkpoints": newPlugin = new Checkpoints(); break;
 				case "Greeter": newPlugin = new Greeter(); break;
+				case "Live": newPlugin = new Live(); break;
 			}
 
 			if (newPlugin == null) {
@@ -126,7 +127,41 @@ namespace Nimania.Runtime
 					}));
 				}
 			}
+			// Wait for all tasks to be complete, because after this the PlayerInfo will be out of the game!
 			Task.WaitAll(tasks.ToArray());
+		}
+
+		public void OnPlayerBegin(PlayerInfo player)
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnPlayerBegin(player);
+					});
+				}
+			}
+		}
+
+		public void OnPlayerCheckpoint(PlayerInfo player, int n, int time)
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnPlayerCheckpoint(player, n, time);
+					});
+				}
+			}
+		}
+
+		public void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints)
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnPlayerFinish(player, time, checkpoints);
+					});
+				}
+			}
 		}
 	}
 }

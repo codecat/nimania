@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -202,6 +203,46 @@ namespace Nimania
 						}
 					}
 				}
+			});
+
+			m_remote.AddCallback("TrackMania.PlayerCheckpoint", (GbxCallback cb) => {
+				int id = cb.m_params[0].Get<int>();
+				int time = cb.m_params[2].Get<int>();
+				int n = cb.m_params[4].Get<int>();
+
+				var player = m_game.GetPlayer(id);
+				if (player == null) {
+					Debug.Assert(false);
+					return;
+				}
+
+				if (n + 1 > player.m_checkpoints.Count) {
+					player.m_checkpoints.Add(time);
+				}
+				m_plugins.OnPlayerCheckpoint(player, n, time);
+			});
+
+			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxCallback cb) => {
+				int id = cb.m_params[0].Get<int>();
+				int time = cb.m_params[2].Get<int>();
+
+				var player = m_game.GetPlayer(id);
+				if (player == null) {
+					Debug.Assert(false);
+					return;
+				}
+
+				if (time == 0) {
+					player.m_checkpoints.Clear();
+					m_plugins.OnPlayerBegin(player);
+					return;
+				}
+
+				if (time < player.m_bestTime) {
+					player.m_bestTime = time;
+				}
+				player.m_lastTime = time;
+				m_plugins.OnPlayerFinish(player, time, player.m_checkpoints.ToArray());
 			});
 		}
 

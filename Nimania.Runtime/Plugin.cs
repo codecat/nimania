@@ -21,10 +21,19 @@ namespace Nimania.Runtime
 
 		public abstract void Initialize();
 		public abstract void Uninitialize();
+
+		// Synced callbacks
 		public virtual void OnAction(string login, string action) { }
+
 		public virtual void OnBeginChallenge() { }
+
 		public virtual void OnPlayerConnect(PlayerInfo player) { }
 		public virtual void OnPlayerDisconnect(PlayerInfo player) { }
+
+		// Trackmania synced callbacks
+		public virtual void OnPlayerBegin(PlayerInfo player) { } // called on retire and begin of 321go
+		public virtual void OnPlayerCheckpoint(PlayerInfo player, int n, int time) { }
+		public virtual void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints) { }
 
 		public void SendView(string file, params string[] kvs) { SendView(file, 0, false, kvs); }
 		public void SendView(string file, int timeout, params string[] kvs) { SendView(file, timeout, false, kvs); }
