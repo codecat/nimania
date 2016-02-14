@@ -144,31 +144,41 @@ namespace Nimania
 
 			// Wait for these because plugin Initializers might need it
 			{
-				m_remote.Query("GetSystemInfo", (GbxResponse res) => {
-					m_game.m_serverIP = res.m_value.Get<string>("PublishedIp");
-					m_game.m_serverPort = res.m_value.Get<int>("Port");
-					m_game.m_serverLogin = res.m_value.Get<string>("ServerLogin");
-				}).Wait();
+				var results = m_remote.MultiQueryWait("GetSystemInfo", // 0
+					"GetServerName", "GetServerComment", "GetHideServer", "GetMaxPlayers", "GetMaxSpectators", "GetGameMode", // 1-6
+					"GetCurrentMapInfo" // 7
+				);
 
-				var results = m_remote.MultiQueryWait("GetServerName", "GetServerComment", "GetHideServer", "GetMaxPlayers", "GetMaxSpectators", "GetGameMode", "GetCurrentMapInfo");
-				m_game.m_serverName = results[0].m_value.Get<string>();
-				m_game.m_serverComment = results[1].m_value.Get<string>();
-				m_game.m_serverPrivate = results[2].m_value.Get<int>() == 1;
-				m_game.m_serverMaxPlayers = results[3].m_value.Get<int>("CurrentValue");
-				m_game.m_serverMaxSpecs = results[4].m_value.Get<int>("CurrentValue");
-				m_game.m_serverGameMode = results[5].m_value.Get<int>();
+				m_game.m_serverIP = results[0].m_value.Get<string>("PublishedIp");
+				m_game.m_serverPort = results[0].m_value.Get<int>("Port");
+				m_game.m_serverLogin = results[0].m_value.Get<string>("ServerLogin");
 
-				m_game.m_currentMap = LoadMapInfo(results[6].m_value);
+				m_game.m_serverName = results[1].m_value.Get<string>();
+				m_game.m_serverComment = results[2].m_value.Get<string>();
+				m_game.m_serverPrivate = results[3].m_value.Get<int>() == 1;
+				m_game.m_serverMaxPlayers = results[4].m_value.Get<int>("CurrentValue");
+				m_game.m_serverMaxSpecs = results[5].m_value.Get<int>("CurrentValue");
+				m_game.m_serverGameMode = results[6].m_value.Get<int>();
 
-				m_remote.Query("GetPlayerList", (GbxResponse res) => {
-					var players = res.m_value.Get<ArrayList>();
+				m_game.m_currentMap = LoadMapInfo(results[7].m_value);
+
+				results = m_remote.MultiQueryWait(new GbxMultiCall() {
+					m_methodName = "GetPlayerList", // 0
+					m_methodParams = new int[] { 255, 0, 0 }
+				}, new GbxMultiCall() {
+					m_methodName = "GetCurrentRanking", // 1
+					m_methodParams = new int[] { 255, 0 }
+				});
+
+				{
+					var players = results[0].m_value.Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						m_game.m_players.Add(LoadPlayerInfo(player));
 					}
-				}, 255, 0, 0).Wait();
+				}
 
-				m_remote.Query("GetCurrentRanking", (GbxResponse res) => {
-					var players = res.m_value.Get<ArrayList>();
+				{
+					var players = results[1].m_value.Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						int id = player.Get<int>("PlayerId");
 
@@ -183,7 +193,7 @@ namespace Nimania
 							ply.m_checkpoints.Add(cp.Get<int>());
 						}
 					}
-				}, 255, 0).Wait();
+				}
 			}
 
 			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {

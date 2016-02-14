@@ -13,6 +13,15 @@ namespace GbxRemoteNet
 {
 	public delegate void OnGbxCallback(GbxCallback e);
 
+	public class GbxMultiCall : GbxStruct
+	{
+		[GbxStructName("methodName")]
+		public string m_methodName;
+
+		[GbxStructName("params")]
+		public Array m_methodParams;
+	}
+
 	public class GbxRemote
 	{
 		public const string DateTimeFormat = "yyyyMMdd\tHH:mm:ss";
@@ -243,16 +252,7 @@ namespace GbxRemoteNet
 			return ret;
 		}
 
-		public class MultiCall : GbxStruct
-		{
-			[GbxStructName("methodName")]
-			public string m_methodName;
-
-			[GbxStructName("params")]
-			public string[] m_methodParams;
-		}
-
-		public GbxRequest MultiQuery(Action<GbxResponse[]> callback, params MultiCall[] methods)
+		public GbxRequest MultiQuery(Action<GbxResponse[]> callback, params GbxMultiCall[] methods)
 		{
 			return Query("system.multicall", (GbxResponse res) => {
 				var ret = new List<GbxResponse>();
@@ -272,17 +272,17 @@ namespace GbxRemoteNet
 
 		public GbxResponse[] MultiQueryWait(params string[] methods)
 		{
-			MultiCall[] arr = new MultiCall[methods.Length];
+			GbxMultiCall[] arr = new GbxMultiCall[methods.Length];
 			for (int i = 0; i < methods.Length; i++) {
-				arr[i] = new MultiCall() {
+				arr[i] = new GbxMultiCall() {
 					m_methodName = methods[i],
-					m_methodParams = new string[0]
+					m_methodParams = new object[0]
 				};
 			}
 			return MultiQueryWait(arr);
 		}
 
-		public GbxResponse[] MultiQueryWait(params MultiCall[] methods)
+		public GbxResponse[] MultiQueryWait(params GbxMultiCall[] methods)
 		{
 			var ret = new List<GbxResponse>();
 			MultiQuery((GbxResponse[] results) => {
