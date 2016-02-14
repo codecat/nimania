@@ -351,7 +351,7 @@ namespace Nimania.Plugins
 						Checks = checks
 					};
 					times.Add(time);
-					if (!bestTime.HasValue || time.Best < bestTime.Value.Best) {
+					if (time.Best != -1 && (!bestTime.HasValue || time.Best < bestTime.Value.Best)) {
 						bestTime = time;
 					}
 				}
@@ -421,7 +421,7 @@ namespace Nimania.Plugins
 			var dediRes = m_api.GetChallengeRecords(m_apiSession, GetDediMapInfo(), GetGameModeID(), GetDediSrvInfo(), plys.ToArray());
 			m_maxDedi = dediRes.ServerMaxRank;
 			SendChat("$f00" + dediRes.Records.Length + "$fff dedimania times on this map (max top " + m_maxDedi + ")");
-			
+
 			foreach (var dedi in dediRes.Records) {
 				m_dediTimes.Add(new DediTime() {
 					Login = dedi.Login,
