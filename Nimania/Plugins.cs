@@ -34,6 +34,7 @@ namespace Nimania.Runtime
 				case "Admin": newPlugin = new Admin(); break;
 				case "Locals": newPlugin = new Locals(); break;
 				case "Dedimania": newPlugin = new Dedimania(); break;
+				case "Checkpoints": newPlugin = new Checkpoints(); break;
 			}
 
 			if (newPlugin == null) {

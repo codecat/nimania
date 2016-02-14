@@ -1,0 +1,5 @@
+<frame posn="<?=x?> <?=y?>">
+	<quad sizen="30 6.5" style="Bgs1" substyle="BgDialogBlur" />
+	<label posn="0.5 -0.5" text="$sCP<?=n?>: $ff0<?=time?>" style="TextPlayerCardName" />
+	<label posn="0.5 -3.5" sizen="29" text="$s<?=name?>" style="TextPlayerCardName" />
+</frame>

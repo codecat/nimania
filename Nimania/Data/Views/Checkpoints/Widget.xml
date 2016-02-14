@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manialink version="2" id="CheckpointsWidget">
+	<frame posn="-120 89">
+		<?=cps?>
+	</frame>
+</manialink>
