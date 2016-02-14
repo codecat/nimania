@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,8 +24,29 @@ namespace Nimania.Runtime
 		public int m_rangeTo;
 	}
 
+	public class DbCache
+	{
+		private DateTime m_timeAdded;
+		public DbModel m_model;
+
+		public DbCache(DbModel model)
+		{
+			m_timeAdded = DateTime.Now;
+			m_model = model;
+		}
+
+		public int TimePassed()
+		{
+			return (int)(DateTime.Now - m_timeAdded).TotalSeconds;
+		}
+	}
+
 	public abstract class DbDriver
 	{
+		//TODO: Make an update loop that clears the cache of outdated rows (it only does it on access right now, which still leaks!)
+		protected Dictionary<string, Dictionary<int, DbCache>> m_modelCache = new Dictionary<string, Dictionary<int, DbCache>>();
+		protected int m_modelCacheTime = 0;
+
 		public string Tablename<T>()
 		{
 			return Tablename(typeof(T));
@@ -56,6 +78,37 @@ namespace Nimania.Runtime
 		public T Create<T>()
 		{
 			return (T)(object)Create(typeof(T));
+		}
+
+		protected DbModel FindCache(string tablename, int pk)
+		{
+			if (m_modelCacheTime == 0) {
+				return null;
+			}
+			if (!m_modelCache.ContainsKey(tablename)) {
+				return null;
+			}
+			if (!m_modelCache[tablename].ContainsKey(pk)) {
+				return null;
+			}
+			var cache = m_modelCache[tablename][pk];
+			if (cache.TimePassed() > m_modelCacheTime) {
+				m_modelCache[tablename].Remove(pk);
+				return null;
+			}
+			return cache.m_model;
+		}
+
+		protected void AddCache(string tablename, int pk, DbModel model)
+		{
+			if (m_modelCacheTime == 0) {
+				return;
+			}
+			if (!m_modelCache.ContainsKey(tablename)) {
+				m_modelCache.Add(tablename, new Dictionary<int, DbCache>());
+			}
+			Debug.Assert(!m_modelCache[tablename].ContainsKey(pk));
+			m_modelCache[tablename].Add(pk, new DbCache(model));
 		}
 
 		internal DbModel Create(Type t)

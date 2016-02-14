@@ -20,6 +20,7 @@ namespace Nimania.Runtime.DbDrivers
 		{
 			m_connectionString = string.Format("Server={0};Database={1};User ID={2};Password={3};Pooling=false;CharSet=utf8;",
 				config["Database.Hostname"], config["Database.Database"], config["Database.Username"], config["Database.Password"]);
+			m_modelCacheTime = config.GetInt("Database.ModelCacheTime");
 			Connect();
 		}
 
@@ -125,18 +126,29 @@ namespace Nimania.Runtime.DbDrivers
 					throw new Exception("Field for primary key '" + primaryKey + "' does not exist in model " + type.Name);
 				}
 				return ((int)fieldPk.GetValue(o)).ToString();
-      }
+			}
 			throw new Exception("Unknown type to encode: " + o.GetType().Name);
 		}
 
 		public override T FindByPk<T>(int id)
 		{
+			string tablename = Tablename<T>();
+			var cachedModel = FindCache(tablename, id);
+			if (cachedModel != null) {
+				return (T)(object)cachedModel;
+			}
+
 			return FindByAttributes<T>("ID", id);
 		}
 
 		public override DbModel FindByPk(int id, Type type)
 		{
 			string tablename = Tablename(type);
+			var cachedModel = FindCache(tablename, id);
+			if (cachedModel != null) {
+				return cachedModel;
+			}
+
 			string primaryKey = PrimaryKey(type);
 
 			string query = "SELECT * FROM `" + tablename + "` WHERE `" + primaryKey + "`=" + id;
@@ -146,6 +158,7 @@ namespace Nimania.Runtime.DbDrivers
 			}
 			DbModel ret = Create(type);
 			ret.LoadRow(rows[0]);
+			AddCache(tablename, id, ret);
 			return ret;
 		}
 
@@ -192,15 +205,23 @@ namespace Nimania.Runtime.DbDrivers
 		public override T FindByAttributes<T>(params dynamic[] attributes)
 		{
 			string tablename = Tablename<T>();
-			string primaryKey = PrimaryKey<T>();
 
 			string query = QueryByAttributes<T>(attributes, null);
 			var rows = Query(query);
 			if (rows.Length != 1) {
 				return default(T);
 			}
+
+			string primaryKey = PrimaryKey<T>();
+			int pk = int.Parse(rows[0][primaryKey]);
+			var cachedModel = FindCache(tablename, pk);
+			if (cachedModel != null) {
+				return (T)(object)cachedModel;
+			}
+
 			var newModel = (DbModel)(object)Create<T>();
 			newModel.LoadRow(rows[0]);
+			AddCache(tablename, pk, newModel);
 			return (T)(object)newModel;
 		}
 
@@ -218,8 +239,18 @@ namespace Nimania.Runtime.DbDrivers
 			var rows = Query(query);
 			var ret = new T[rows.Length];
 			for (int i = 0; i < rows.Length; i++) {
+				var row = rows[i];
+
+				int pk = int.Parse(row[primaryKey]);
+				var cachedModel = FindCache(tablename, pk);
+				if (cachedModel != null) {
+					ret[i] = (T)(object)cachedModel;
+					continue;
+				}
+
 				var newModel = (DbModel)(object)Create<T>();
-				newModel.LoadRow(rows[i]);
+				newModel.LoadRow(row);
+				AddCache(tablename, pk, newModel);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;
@@ -233,13 +264,24 @@ namespace Nimania.Runtime.DbDrivers
 		public override T[] FindAll<T>(DbQueryOptions options)
 		{
 			string tablename = Tablename<T>();
+			string primaryKey = PrimaryKey<T>();
 
 			string query = "SELECT * FROM `" + tablename + "`" + QueryOptions(options);
 			var rows = Query(query);
 			var ret = new T[rows.Length];
 			for (int i = 0; i < rows.Length; i++) {
+				var row = rows[i];
+
+				int pk = int.Parse(row[primaryKey]);
+				var cachedModel = FindCache(tablename, pk);
+				if (cachedModel != null) {
+					ret[i] = (T)(object)cachedModel;
+					continue;
+				}
+
 				var newModel = (DbModel)(object)Create<T>();
 				newModel.LoadRow(rows[i]);
+				AddCache(tablename, pk, newModel);
 				ret[i] = (T)(object)newModel;
 			}
 			return ret;
@@ -259,18 +301,8 @@ namespace Nimania.Runtime.DbDrivers
 			}
 
 			var type = model.GetType();
-
-			var propTableName = type.GetProperty("Tablename");
-			if (propTableName == null) {
-				throw new Exception("Static 'Tablename' property not defined!");
-			}
-			var tableName = propTableName.GetValue(model);
-
-			var propPrimaryKey = type.GetProperty("PrimaryKey");
-			var primaryKey = "ID";
-			if (propPrimaryKey != null) {
-				primaryKey = (string)propPrimaryKey.GetValue(null);
-			}
+			var tableName = Tablename(type);
+			var primaryKey = PrimaryKey(type);
 
 			string query = "UPDATE `" + tableName + "` SET ";
 			for (int i = 0; i < dirtyKeys.Length; i++) {
@@ -291,18 +323,8 @@ namespace Nimania.Runtime.DbDrivers
 		public override void Insert(DbModel model)
 		{
 			var type = model.GetType();
-
-			var propTableName = type.GetProperty("Tablename");
-			if (propTableName == null) {
-				throw new Exception("Static 'Tablename' property not defined!");
-			}
-			var tableName = propTableName.GetValue(model);
-
-			var propPrimaryKey = type.GetProperty("PrimaryKey");
-			var primaryKey = "ID";
-			if (propPrimaryKey != null) {
-				primaryKey = (string)propPrimaryKey.GetValue(null);
-			}
+			var tableName = Tablename(type);
+			var primaryKey = PrimaryKey(type);
 
 			string query = "INSERT INTO `" + tableName + "` (";
 			string queryValues = "";
@@ -332,6 +354,8 @@ namespace Nimania.Runtime.DbDrivers
 			query += ") VALUES(" + queryValues + ");SELECT LAST_INSERT_ID();";
 
 			int newPk = QueryScalarInt(query);
+
+			AddCache(tableName, newPk, model);
 
 			var fieldPk = type.GetField(primaryKey);
 			if (fieldPk != null) {
