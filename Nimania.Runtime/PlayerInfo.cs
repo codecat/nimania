@@ -28,5 +28,27 @@ namespace Nimania.Runtime
 		public DateTime m_joinTime;
 
 		public LocalPlayer m_localPlayer;
+
+		public bool IsAdmin
+		{
+			get
+			{
+				if (m_localPlayer.Group == null) {
+					return false;
+				}
+				return m_localPlayer.Group.IsAdmin;
+			}
+		}
+
+		public bool IsDeveloper
+		{
+			get
+			{
+				if (m_localPlayer.Group == null) {
+					return false;
+				}
+				return m_localPlayer.Group.IsDeveloper;
+			}
+		}
 	}
 }

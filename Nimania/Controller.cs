@@ -142,12 +142,16 @@ namespace Nimania
 
 			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
 				int id = cb.m_params[0].Get<int>();
-				string login = cb.m_params[1].Get<string>();
 				string message = cb.m_params[2].Get<string>();
-				if (login == "ansjh") {
+				bool command = cb.m_params[3].Get<bool>();
+
+				//TODO: Change to 'command', because on local servers, command is always false
+				if (true) { // command) {
+					var player = m_game.GetPlayer(id);
+
 					switch (message) {
-						case "/reload": Reload(); break;
-						case "/shutdown": Shutdown(); break;
+						case "/reload": if (player.IsDeveloper) { Reload(); } break;
+						case "/shutdown": if (player.IsDeveloper) { Shutdown(); } break;
 						case "/playtime":
 							var pi = m_game.GetPlayer(id);
 							m_remote.Execute("ChatSendServerMessageToId", "$fffYou have played for: $666" + Utils.TimeStringHMS((int)(DateTime.Now - pi.m_joinTime).TotalSeconds), id);
@@ -293,7 +297,8 @@ namespace Nimania
 
 				var player = m_game.GetPlayer(id);
 				if (player == null) {
-					Debug.Assert(false);
+					// somehow, this happens to be the dedicated server (with dedi login) doing time 0 on retire..??
+					//Debug.Assert(false);
 					return;
 				}
 
