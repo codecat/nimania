@@ -83,10 +83,23 @@ namespace Nimania.Plugins
 		public int MaxSpecs;
 	}
 
+	public struct DediVotesInfo
+	{
+		public string UId;
+		public string GameMode;
+	}
+
 	public struct DediPlayer
 	{
 		public string Login;
 		public bool IsSpec;
+	}
+
+	public struct DediPlayerUpdate // just SLIGHTLY different than DediPlayer above.. grr.
+	{
+		public string Login;
+		public bool IsSpec;
+		public int Vote;
 	}
 
 	public struct ResponseSetChallengeTimesRecord
@@ -136,6 +149,9 @@ namespace Nimania.Plugins
 
 		[XmlRpcMethod("dedimania.SetChallengeTimes")]
 		ResponseSetChallengeTimes SetChallengeTimes(string session, DediMapInfo mapInfo, string gameMode, DediPlayerTime[] times, DediReplay replays);
+
+		[XmlRpcMethod("dedimania.UpdateServerPlayers")]
+		bool UpdateServerPlayers(string session, DediSrvInfo srvInfo, DediVotesInfo votesInfo, DediPlayerUpdate[] players);
 	}
 
 	public class DediTime
@@ -155,6 +171,8 @@ namespace Nimania.Plugins
 
 		public IDedimaniaAPI m_api;
 		public string m_apiSession = "";
+
+		public DateTime m_lastUpdate = DateTime.Now;
 
 		public override void Initialize()
 		{
@@ -220,6 +238,34 @@ namespace Nimania.Plugins
 			SendDediTimes();
 		}
 
+		public override void EverySecond()
+		{
+			var diff = DateTime.Now - m_lastUpdate;
+			if (diff.TotalMinutes >= 4.0) {
+				m_lastUpdate = DateTime.Now;
+				var dsi = GetDediSrvInfo();
+				var dpu = new List<DediPlayerUpdate>();
+				lock (m_game.m_players) {
+					foreach (var player in m_game.m_players) {
+						dpu.Add(new DediPlayerUpdate() {
+							Login = player.m_login,
+							IsSpec = player.m_spectating,
+							Vote = -1
+						});
+					}
+				}
+				bool ok = m_api.UpdateServerPlayers(m_apiSession, dsi, new DediVotesInfo() {
+					GameMode = GetGameModeID(),
+					UId = m_game.m_currentMap.UId
+				}, dpu.ToArray());
+				if (!ok) {
+					Console.WriteLine("Unexpected Dedimania response on UpdateServerPlayers!");
+				} else {
+					Console.WriteLine("Dedimania heartbeat sent");
+				}
+			}
+		}
+
 		public override void OnBeginChallenge()
 		{
 			ReloadMapInfo();
@@ -242,6 +288,7 @@ namespace Nimania.Plugins
 			lock (m_dediTimes) {
 				bool hadTime = false;
 
+				//TODO: m_maxDedi is not consistent - players who donated can have 60 or 100
 				int ct = Math.Min(m_dediTimes.Count, m_maxDedi);
 				for (int i = 0; i < ct; i++) {
 					var dediTime = m_dediTimes[i];
@@ -332,14 +379,8 @@ namespace Nimania.Plugins
 			return m_game.m_serverGameMode == 1 ? "Rounds" : "TA";
 		}
 
-		public void UpdateDediPlayers()
-		{
-
-		}
-
 		public void SendDediTimes()
 		{
-			//TODO: Also process paid-players (for > maxcount dedis and such..)
 			DediPlayerTime? bestTime = null;
 			var times = new List<DediPlayerTime>();
 			lock (m_game.m_players) {
@@ -389,11 +430,15 @@ namespace Nimania.Plugins
 
 			var vReplay = resVReplay.m_value.Get<byte[]>();
 
-			var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
-				VReplay = vReplay,
-				VReplayChecks = bestTime.Value.Checks, // TODO: Make this all checkpoints (in case of laps) or it won't validate!
-				Top1GReplay = top1Replay
-			});
+			try {
+				var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
+					VReplay = vReplay,
+					VReplayChecks = bestTime.Value.Checks, // TODO: Make this all checkpoints (in case of laps) or it won't validate!
+					Top1GReplay = top1Replay
+				});
+			} catch {
+				SendChat("$f00Dedimania failed to send :(");
+			}
 			return;
 		}
 
@@ -418,11 +463,18 @@ namespace Nimania.Plugins
 				}
 			}
 
-			var dediRes = m_api.GetChallengeRecords(m_apiSession, GetDediMapInfo(), GetGameModeID(), GetDediSrvInfo(), plys.ToArray());
-			m_maxDedi = dediRes.ServerMaxRank;
-			SendChat("$f00" + dediRes.Records.Length + "$fff dedimania times on this map (max top " + m_maxDedi + ")");
+			ResponseChallengeRecords? dediRes;
+			try {
+				dediRes = m_api.GetChallengeRecords(m_apiSession, GetDediMapInfo(), GetGameModeID(), GetDediSrvInfo(), plys.ToArray());
+			} catch {
+				SendChat("$f00Dedimania is down :(");
+				return;
+			}
+			m_lastUpdate = DateTime.Now;
+			m_maxDedi = dediRes.Value.ServerMaxRank;
+			SendChat("$f00" + dediRes.Value.Records.Length + "$fff dedimania times on this map (max top " + m_maxDedi + ")");
 
-			foreach (var dedi in dediRes.Records) {
+			foreach (var dedi in dediRes.Value.Records) {
 				m_dediTimes.Add(new DediTime() {
 					Login = dedi.Login,
 					NickName = dedi.NickName,
@@ -430,8 +482,8 @@ namespace Nimania.Plugins
 				});
 			}
 
-			if (dediRes.Records.Length > 0) {
-				m_currentTop1 = dediRes.Records[0].Best;
+			if (dediRes.Value.Records.Length > 0) {
+				m_currentTop1 = dediRes.Value.Records[0].Best;
 			} else {
 				m_currentTop1 = -1;
 			}

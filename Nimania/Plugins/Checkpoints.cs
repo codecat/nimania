@@ -46,22 +46,28 @@ namespace Nimania.Plugins
 
 		public override void OnPlayerCheckpoint(PlayerInfo player, int n, int time)
 		{
+			bool updated = false;
+
 			if (n + 1 > m_cps.Count) {
 				if (m_cps.Count == n && n != m_cpCount - 1) {
 					m_cps.Add(new BestCp() {
 						m_player = player,
 						m_time = time
 					});
+					updated = true;
 				}
 			} else {
 				var cp = m_cps[n];
 				if (time < cp.m_time) {
 					cp.m_player = player;
 					cp.m_time = time;
+					updated = true;
 				}
 			}
 
-			SendWidget();
+			if (updated) {
+				SendWidget();
+			}
 		}
 
 		void SendWidget(string login = "")

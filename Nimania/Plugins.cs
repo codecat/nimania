@@ -95,13 +95,20 @@ namespace Nimania.Runtime
 			return null;
 		}
 
+		public void EverySecond()
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(plugin.EverySecond);
+				}
+			}
+		}
+
 		public void OnBeginChallenge()
 		{
 			lock (m_plugins) {
 				foreach (var plugin in m_plugins) {
-					Task.Factory.StartNew(() => {
-						plugin.OnBeginChallenge();
-					});
+					Task.Factory.StartNew(plugin.OnBeginChallenge);
 				}
 			}
 		}
@@ -110,9 +117,7 @@ namespace Nimania.Runtime
 		{
 			lock (m_plugins) {
 				foreach (var plugin in m_plugins) {
-					Task.Factory.StartNew(() => {
-						plugin.OnEndChallenge();
-					});
+					Task.Factory.StartNew(plugin.OnEndChallenge);
 				}
 			}
 		}

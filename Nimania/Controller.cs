@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
@@ -23,6 +24,8 @@ namespace Nimania
 		private PluginManager m_plugins;
 
 		public GameInfo m_game;
+
+		private bool m_runningTimer;
 
 		public Controller(string configFilename)
 		{
@@ -94,9 +97,20 @@ namespace Nimania
 			m_remote.EnableCallbacks(true);
 		}
 
+		private void TimerThread()
+		{
+			while (m_runningTimer) {
+				m_plugins.EverySecond();
+				Thread.Sleep(1000);
+			}
+		}
+
 		private void SetupCore()
 		{
 			m_game = new GameInfo();
+
+			var timerThread = new Thread(TimerThread);
+			timerThread.Start();
 
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
 				int id = cb.m_params[0].Get<int>();
@@ -183,16 +197,18 @@ namespace Nimania
 						int id = player.Get<int>("PlayerId");
 
 						var ply = m_game.GetPlayer(id);
-						ply.m_bestTime = player.Get<int>("BestTime");
-						ply.m_prevBestTime = ply.m_bestTime;
-						ply.m_lastTime = ply.m_bestTime;
-						ply.m_score = player.Get<int>("Score");
+						if (ply != null) { // null happens if they are disconnected!
+							ply.m_bestTime = player.Get<int>("BestTime");
+							ply.m_prevBestTime = ply.m_bestTime;
+							ply.m_lastTime = ply.m_bestTime;
+							ply.m_score = player.Get<int>("Score");
 
-						var cps = player.Get<ArrayList>("BestCheckpoints");
-						foreach (GbxValue cp in cps) {
-							int cpt = cp.Get<int>();
-							ply.m_checkpoints.Add(cpt);
-							ply.m_bestCheckpoints.Add(cpt);
+							var cps = player.Get<ArrayList>("BestCheckpoints");
+							foreach (GbxValue cp in cps) {
+								int cpt = cp.Get<int>();
+								ply.m_checkpoints.Add(cpt);
+								ply.m_bestCheckpoints.Add(cpt);
+							}
 						}
 					}
 				}

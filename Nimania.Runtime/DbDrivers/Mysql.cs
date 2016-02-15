@@ -344,15 +344,17 @@ namespace Nimania.Runtime.DbDrivers
 				if (field.Name == primaryKey) {
 					continue;
 				}
-				if (i > 0) {
-					query += ",";
-					queryValues += ",";
-				}
-
 				object v = field.GetValue(model);
-				query += "`" + field.Name + "`";
-				queryValues += Encode(v);
-				i++;
+				if (v != null) {
+					if (i > 0) {
+						query += ",";
+						queryValues += ",";
+					}
+
+					query += "`" + field.Name + "`";
+					queryValues += Encode(v);
+					i++;
+				}
 
 				model.m_originalData[field.Name] = v;
 			}

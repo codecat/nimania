@@ -37,7 +37,11 @@ namespace Nimania.Plugins
 				player.m_localPlayer.Save();
 
 				string joinMessage = m_joinMessages[m_random.Next(m_joinMessages.Length)];
-				SendChat(string.Format(joinMessage, player.m_localPlayer.Group.Name, player.m_nickname, from, player.m_localPlayer.Visits.ToString()));
+				string groupName = "";
+				if (player.m_localPlayer.Group != null) {
+					groupName = player.m_localPlayer.Group.Name;
+				}
+				SendChat(string.Format(joinMessage, groupName, player.m_nickname, from, player.m_localPlayer.Visits.ToString()));
 			}, player.m_login);
 		}
 
@@ -45,7 +49,11 @@ namespace Nimania.Plugins
 		{
 			string leaveMessage = m_leaveMessages[m_random.Next(m_leaveMessages.Length)];
 			int playtime = (int)(DateTime.Now - player.m_joinTime).TotalSeconds;
-			SendChat(string.Format(leaveMessage, player.m_localPlayer.Group.Name, player.m_nickname, Utils.TimeStringHMS(playtime)));
+			string groupName = "";
+			if (player.m_localPlayer.Group != null) {
+				groupName = player.m_localPlayer.Group.Name;
+			}
+			SendChat(string.Format(leaveMessage, groupName, player.m_nickname, Utils.TimeStringHMS(playtime)));
 		}
 	}
 }

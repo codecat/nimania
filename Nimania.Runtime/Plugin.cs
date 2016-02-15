@@ -22,6 +22,8 @@ namespace Nimania.Runtime
 		public abstract void Initialize();
 		public abstract void Uninitialize();
 
+		public virtual void EverySecond() { }
+
 		// Synced callbacks
 		public virtual void OnAction(PlayerInfo player, string action) { }
 
