@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
-using Nimania.Plugins;
 using Nimania.Runtime;
 using Nimania.Runtime.DbModels;
+using CSScriptLibrary;
+using System.IO;
 
 namespace Nimania.Runtime
 {
@@ -19,24 +20,43 @@ namespace Nimania.Runtime
 		private GbxRemote m_remote;
 		private DbDriver m_database;
 
+		private AsmHelper m_scripting;
+
 		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
+
+#if DEBUG
+			string[] scriptFiles = Directory.GetFiles("../../Data/Plugins/", "*.cs", SearchOption.AllDirectories);
+#else
+			string[] scriptFiles = Directory.GetFiles("Data/Plugins/", "*.cs", SearchOption.AllDirectories);
+#endif
+
+			Console.WriteLine("Compiling " + scriptFiles.Length + " scripts:");
+			foreach (var fnm in scriptFiles) {
+				Console.WriteLine("  " + fnm);
+			}
+
+			try {
+				m_scripting = new AsmHelper(CSScript.LoadFiles(scriptFiles, "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2"));
+			} catch (Exception ex) {
+				Console.WriteLine("Couldn't compile scripts:");
+				Console.WriteLine("  " + ex.ToString());
+				m_scripting = null;
+			}
 		}
 
 		public Plugin Load(string name)
 		{
 			Plugin newPlugin = null;
 			switch (name) {
-				case "Developer": newPlugin = new Developer(); break;
-				case "Admin": newPlugin = new Admin(); break;
-				case "Locals": newPlugin = new Locals(); break;
-				case "Dedimania": newPlugin = new Dedimania(); break;
-				case "Checkpoints": newPlugin = new Checkpoints(); break;
-				case "Greeter": newPlugin = new Greeter(); break;
-				case "Live": newPlugin = new Live(); break;
+				default:
+					if (m_scripting != null) {
+						newPlugin = (Plugin)m_scripting.CreateObject(name);
+					}
+					break;
 			}
 
 			if (newPlugin == null) {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -33,7 +33,7 @@ namespace Nimania.Plugins
 
 		public override void OnAction(PlayerInfo player, string action)
 		{
-			if (player.IsDeveloper) {
+			if (!player.IsDeveloper) {
 				Console.WriteLine("User " + player.m_login + " tried accessing developer controls, not allowed!");
 				return;
 			}

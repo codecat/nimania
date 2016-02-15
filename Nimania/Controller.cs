@@ -90,7 +90,9 @@ namespace Nimania
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
 				var newPlugin = m_plugins.Load(name);
-				newPlugin.m_game = m_game;
+				if (newPlugin != null) {
+					newPlugin.m_game = m_game;
+				}
 			}
 			m_plugins.Initialize();
 
