@@ -79,7 +79,7 @@ namespace Nimania.Plugins
 					"y", y.ToString(),
 					"n", (i + 1).ToString(),
 					"time", Utils.TimeString(cp.m_time),
-					"name", Utils.XmlEntities(cp.m_player.m_nickname));
+					"name", Utils.XmlEntities(cp.m_player.NoLinkNickname));
 			}
 
 			if (login == "") {

@@ -17,6 +17,9 @@ namespace Nimania.Runtime
 		public bool m_officialMode;
 		public int m_ladder;
 
+		public string StrippedNickname { get { return Utils.StripFormatCodes(m_nickname); } }
+		public string NoLinkNickname { get { return Utils.StripLinkCodes(m_nickname); } }
+
 		public List<int> m_checkpoints = new List<int>();
 		public List<int> m_bestCheckpoints = new List<int>();
 		public int m_prevBestTime = -1;

@@ -502,7 +502,7 @@ namespace Nimania.Plugins
 					xmlItems += GetView("Dedimania/Item.xml",
 						"y", (-3.5 * i).ToString(),
 						"place", (i + 1).ToString(),
-						"name", Utils.XmlEntities(time.NickName),
+						"name", Utils.XmlEntities(Utils.StripLinkCodes(time.NickName)),
 						"time", Utils.TimeString(time.Time));
 				}
 			}

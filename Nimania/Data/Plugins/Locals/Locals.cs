@@ -142,7 +142,7 @@ namespace Nimania.Plugins
 					xmlItems += GetView("Locals/Item.xml",
 						"y", (-3.5 * i).ToString(),
 						"place", (i + 1).ToString(),
-						"name", Utils.XmlEntities(time.Player.Nickname),
+						"name", Utils.XmlEntities(time.Player.NoLinkNickname),
 						"time", Utils.TimeString(time.Time));
 				}
 			}

@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manialink version="2" id="DeveloperBar">
-	<frame posn="74 76">
-		<quad sizen="40 24" bgcolor="F002" />
-		<quad sizen="40 24" style="Bgs1" substyle="BgDialogBlur" />
-		<quad posn="1 -1 2 1" sizen="6 6" style="Icons128x128_1" substyle="ProfileVehicle" action="Developer.Reload" />
-		<label text="$fffDev Control" sizen="15" posn="8 -2.5" style="StyleTextScriptEditor" />
-		<quad posn="33 -1 2 1" sizen="6 6" style="Icons64x64_1" substyle="QuitRace" action="Developer.Shutdown" />
-		<label text="$fffPlugins: $ff0<?=plugin_count?>" sizen="38" posn="1 -8.5" style="StyleTextScriptEditor" />
-		<label text="$fff Errors: $ff0<?=plugin_errors?>" sizen="38" posn="1 -12.5" style="StyleTextScriptEditor" />
-		<label text="Softreload" posn="1 -17" style="TextCardScores2" scriptevents="1" action="Developer.SoftReload"></label>
+	<frame posn="70 76">
+		<quad posn="-1 0" sizen="42 4" style="Bgs1InRace" substyle="BgCard" />
+		<label text="$sDev Control" style="TextCardSmall" sizen="44" posn="-0.5 -0.5 1" />
+
+		<quad posn="0 -4" sizen="40 26" bgcolor="2227" />
+
+		<quad posn="33 -3 2 1" sizen="6 6" style="Icons64x64_1" substyle="QuitRace" action="Developer.Shutdown" />
+
+		<label text="$fffPlugins: $ff0<?=plugin_count?>" sizen="38" posn="1.5 -6" style="StyleTextScriptEditor" />
+		<label text="$fff Errors: $ff0<?=plugin_errors?>" sizen="38" posn="1.5 -10" style="StyleTextScriptEditor" />
+
+		<label text="Reload" posn="6 -17" style="CardButtonSmallS" scriptevents="1" action="Developer.Reload"></label>
+		<label text="Softreload" posn="6 -23" style="CardButtonSmallS" scriptevents="1" action="Developer.SoftReload"></label>
 	</frame>
 </manialink>
