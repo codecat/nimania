@@ -88,5 +88,10 @@ namespace Nimania.Plugins
 				SendViewToLogin(login, "Checkpoints/Widget.xml", "cps", xmlCps);
 			}
 		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
+		}
 	}
 }

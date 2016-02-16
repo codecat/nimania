@@ -11,13 +11,7 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			lock (m_game.m_players) {
-				foreach (var player in m_game.m_players) {
-					if (player.IsDeveloper) {
-						SendWidget(player.m_login);
-					}
-				}
-			}
+			SendWidget();
 		}
 
 		public override void Uninitialize()
@@ -28,6 +22,17 @@ namespace Nimania.Plugins
 		{
 			if (player.IsDeveloper) {
 				SendWidget(player.m_login);
+			}
+		}
+
+		public void SendWidget()
+		{
+			lock (m_game.m_players) {
+				foreach (var player in m_game.m_players) {
+					if (player.IsDeveloper) {
+						SendWidget(player.m_login);
+					}
+				}
 			}
 		}
 
@@ -48,7 +53,13 @@ namespace Nimania.Plugins
 			switch (action) {
 				case "Reload": Program.CurrentController.Reload(); break;
 				case "Shutdown": Program.CurrentController.Shutdown(); break;
+				case "SoftReload": Program.CurrentController.SoftReload(); break;
 			}
+		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
 		}
 	}
 }

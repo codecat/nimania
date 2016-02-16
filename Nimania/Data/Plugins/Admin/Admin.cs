@@ -11,13 +11,7 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			lock (m_game.m_players) {
-				foreach (var player in m_game.m_players) {
-					if (player.IsAdmin) {
-						SendViewToLogin(player.m_login, "Admin/Bar.xml");
-					}
-				}
-			}
+			SendWidget();
 		}
 
 		public override void Uninitialize()
@@ -27,8 +21,24 @@ namespace Nimania.Plugins
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			if (player.IsAdmin) {
-				SendViewToLogin(player.m_login, "Admin/Bar.xml");
+				SendWidget(player.m_login);
 			}
+		}
+
+		public void SendWidget()
+		{
+			lock (m_game.m_players) {
+				foreach (var player in m_game.m_players) {
+					if (player.IsAdmin) {
+						SendViewToLogin(player.m_login, "Admin/Bar.xml");
+					}
+				}
+			}
+		}
+
+		public void SendWidget(string login)
+		{
+			SendViewToLogin(login, "Admin/Bar.xml");
 		}
 
 		public override void OnAction(PlayerInfo player, string action)
@@ -53,6 +63,11 @@ namespace Nimania.Plugins
 					m_remote.Execute("NextMap");
 					break;
 			}
+		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
 		}
 	}
 }

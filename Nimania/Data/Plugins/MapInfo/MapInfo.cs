@@ -42,5 +42,10 @@ namespace Nimania.Plugins
 					"time", Utils.TimeString(m_game.m_currentMap.m_timeAuthor));
 			}
 		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
+		}
 	}
 }

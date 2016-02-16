@@ -56,6 +56,16 @@ namespace Nimania
 			Program.Running = false;
 		}
 
+		public void SoftReload()
+		{
+			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Soft-reloading");
+			lock (m_plugins.m_plugins) {
+				foreach (var plugin in m_plugins.m_plugins) {
+					plugin.SoftReload();
+				}
+			}
+		}
+
 		public void Run()
 		{
 			GbxRemote.ReportDebug = m_config.GetBool("Debug.GbxRemote");

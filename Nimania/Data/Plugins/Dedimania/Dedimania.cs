@@ -513,5 +513,10 @@ namespace Nimania.Plugins
 				SendViewToLogin(login, "Dedimania/Widget.xml", "items", xmlItems);
 			}
 		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
+		}
 	}
 }

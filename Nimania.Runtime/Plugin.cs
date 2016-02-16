@@ -24,6 +24,9 @@ namespace Nimania.Runtime
 
 		public virtual void EverySecond() { }
 
+		// Soft reload, typically called from developer UI, should usually only resend widgets
+		public virtual void SoftReload() { }
+
 		// Synced callbacks
 		public virtual void OnAction(PlayerInfo player, string action) { }
 

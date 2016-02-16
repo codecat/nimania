@@ -75,5 +75,10 @@ namespace Nimania.Plugins
 				SendViewToLogin(login, "Live/WidgetTA.xml", "items", xmlItems);
 			}
 		}
+
+		public override void SoftReload()
+		{
+			SendWidget();
+		}
 	}
 }
