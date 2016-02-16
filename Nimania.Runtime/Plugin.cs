@@ -46,6 +46,9 @@ namespace Nimania.Runtime
 		public void SendView(string file, int timeout, bool clickHides, params string[] kvs)
 		{
 			string xml = GetView(file, kvs);
+			if (xml == "") {
+				return;
+			}
 			m_remote.Execute("SendDisplayManialinkPage", xml, timeout, clickHides);
 		}
 
@@ -54,6 +57,9 @@ namespace Nimania.Runtime
 		public void SendViewToLogin(string login, string file, int timeout, bool clickHides, params string[] kvs)
 		{
 			string xml = GetView(file, kvs);
+			if (xml == "") {
+				return;
+			}
 			m_remote.Execute("SendDisplayManialinkPageToLogin", login, xml, timeout, clickHides);
 		}
 
@@ -78,10 +84,15 @@ namespace Nimania.Runtime
 				throw new Exception("Uneven amount of strings passed to SendView!");
 			}
 #if DEBUG
-			string xml = File.ReadAllText("../../Data/Views/" + file);
+			string xmlFilename = "../../Data/Views/" + file;
 #else
-			string xml = File.ReadAllText("Data/Views/" + file);
+			string xmlFilename = "Data/Views/" + file;
 #endif
+			if (!File.Exists(xmlFilename)) {
+				Console.WriteLine("View not found: " + file);
+				return "";
+			}
+			string xml = File.ReadAllText(xmlFilename);
 			for (int i = 0; i < kvs.Length; i += 2) {
 				xml = xml.Replace("<?=" + kvs[i] + "?>", kvs[i + 1]);
 			}

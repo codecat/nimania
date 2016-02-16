@@ -10,14 +10,24 @@ namespace Nimania.Plugins
 {
 	public class Live : Plugin
 	{
+		public int m_gamemode;
+
 		public override void Initialize()
 		{
-			SendWidget();
+			ReloadMapInfo();
 		}
 
 		public override void OnBeginChallenge()
 		{
-			SendWidget();
+			ReloadMapInfo();
+		}
+
+		public void ReloadMapInfo()
+		{
+			m_remote.Query("GetGameMode", (GbxResponse res) => {
+				m_gamemode = res.m_value.Get<int>();
+				SendWidget();
+			});
 		}
 
 		public override void OnPlayerConnect(PlayerInfo player)
@@ -56,7 +66,11 @@ namespace Nimania.Plugins
 					if (player.m_bestTime == -1) {
 						continue;
 					}
-					xmlItems += GetView("Locals/Item.xml",
+					string viewName = "Locals/ItemTime.xml";
+					if (m_gamemode == 1) { // Rounds
+						viewName = "Locals/ItemPoints.xml";
+					}
+					xmlItems += GetView("Locals/ItemTime.xml",
 						"y", (-3.5 * n).ToString(),
 						"place", (n + 1).ToString(),
 						"name", Utils.XmlEntities(player.NoLinkNickname),
@@ -66,9 +80,9 @@ namespace Nimania.Plugins
 			}
 
 			if (login == "") {
-				SendView("Live/WidgetTA.xml", "items", xmlItems);
+				SendView("Live/Widget.xml", "items", xmlItems);
 			} else {
-				SendViewToLogin(login, "Live/WidgetTA.xml", "items", xmlItems);
+				SendViewToLogin(login, "Live/Widget.xml", "items", xmlItems);
 			}
 		}
 

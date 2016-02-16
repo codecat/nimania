@@ -191,13 +191,16 @@ namespace GbxRemoteNet
 							}
 						}
 					}
-				} catch (IOException) {
-					if (m_keepReading) {
-						PrintError("Connection to server closed unexpectedly!");
-						PrintInfo("Reconnecting...");
-						Connect(m_connectHost, m_connectPort);
+				} catch (Exception ex) {
+					if (ex is IOException || ex is ObjectDisposedException) {
+						if (m_keepReading) {
+							PrintError("Connection to server closed unexpectedly!");
+							PrintInfo("Reconnecting...");
+							Connect(m_connectHost, m_connectPort);
+						}
+						return;
 					}
-					return;
+					throw;
 				}
 			}
 		}
