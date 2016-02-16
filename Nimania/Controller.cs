@@ -156,29 +156,6 @@ namespace Nimania
 				plugin.OnAction(player, parse[1]);
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				string message = cb.m_params[2].Get<string>();
-				bool command = cb.m_params[3].Get<bool>();
-
-				if (m_config.GetBool("Server.Local") && message.StartsWith("/")) {
-					command = true;
-				}
-
-				if (command) {
-					var player = m_game.GetPlayer(id);
-
-					switch (message) {
-						case "/reload": if (player.IsDeveloper) { Reload(); } break;
-						case "/shutdown": if (player.IsDeveloper) { Shutdown(); } break;
-						case "/playtime":
-							var pi = m_game.GetPlayer(id);
-							m_remote.Execute("ChatSendServerMessageToId", "$fffYou have played for: $666" + Utils.TimeStringHMS((int)(DateTime.Now - pi.m_joinTime).TotalSeconds), id);
-							break;
-					}
-				}
-			});
-
 			// Wait for these because plugin Initializers might need it
 			{
 				var results = m_remote.MultiQueryWait("GetSystemInfo", // 0
