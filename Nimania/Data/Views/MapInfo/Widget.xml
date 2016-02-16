@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manialink version="2" id="MapInfoWidget">
 	<frame posn="160 90">
-		<quad sizen="45 14" style="Bgs1" substyle="BgDialogBlur" halign="right" />
+		<quad sizen="45 14" bgcolor="4447" halign="right" />
 		<label text="$s<?=name?>" style="TextCardSmall" halign="right" sizen="44" posn="-0.5 -0.5" />
 		<label text="$s<?=author?>" style="TextPlayerCardName" halign="right" sizen="44" posn="-0.5 -4" />
 		<label text="$s<?=time?>" style="TextPlayerCardName" halign="right" sizen="44" posn="-0.5 -8" />
