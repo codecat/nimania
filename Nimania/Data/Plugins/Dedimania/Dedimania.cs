@@ -288,14 +288,20 @@ namespace Nimania.Plugins
 
 			var vReplay = resVReplay.m_value.Get<byte[]>();
 
-			try {
-				var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
-					VReplay = vReplay,
-					VReplayChecks = bestTime.Value.Checks, // TODO: Make this all checkpoints (in case of laps) or it won't validate!
-					Top1GReplay = top1Replay
-				});
-			} catch {
-				SendChat("$f00Dedimania failed to send :(");
+			bool sentOk = false;
+			for (int i = 0; i < 3; i++) {
+				try {
+					var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
+						VReplay = vReplay,
+						VReplayChecks = bestTime.Value.Checks, // TODO: Make this all checkpoints (in case of laps) or it won't validate!
+						Top1GReplay = top1Replay
+					});
+					sentOk = true;
+					break;
+				} catch { continue; }
+			}
+			if (!sentOk) {
+				SendChat("$f00Failed $fffsending Dedmania records after 3 attempts!");
 			}
 			return;
 		}
@@ -321,16 +327,22 @@ namespace Nimania.Plugins
 				}
 			}
 
-			ResponseChallengeRecords? dediRes;
-			try {
-				dediRes = m_api.GetChallengeRecords(m_apiSession, GetDediMapInfo(), GetGameModeID(), GetDediSrvInfo(), plys.ToArray());
-			} catch {
-				SendChat("$f00Dedimania is down :(");
+			ResponseChallengeRecords? dediRes = null;
+			for (int i = 0; i < 3; i++) {
+				try {
+					dediRes = m_api.GetChallengeRecords(m_apiSession, GetDediMapInfo(), GetGameModeID(), GetDediSrvInfo(), plys.ToArray());
+					break;
+				} catch { continue; }
+			}
+
+			if (!dediRes.HasValue) {
+				SendChat("$f00Failed $fffretrieving records from Dedimania after 3 attempts!");
 				return;
 			}
+
 			m_lastUpdate = DateTime.Now;
 			m_maxDedi = dediRes.Value.ServerMaxRank;
-			SendChat("$f00" + dediRes.Value.Records.Length + "$fff dedimania times on this map (max top " + m_maxDedi + ")");
+			SendChat("$f00" + dediRes.Value.Records.Length + "$fff dedimania times on this map");
 
 			foreach (var dedi in dediRes.Value.Records) {
 				m_dediTimes.Add(new DediTime() {
