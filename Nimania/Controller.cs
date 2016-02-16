@@ -100,6 +100,9 @@ namespace Nimania
 			}
 			m_plugins.Initialize();
 
+			var timerThread = new Thread(TimerThread);
+			timerThread.Start();
+
 			m_remote.EnableCallbacks(true);
 		}
 
@@ -114,9 +117,6 @@ namespace Nimania
 		private void SetupCore()
 		{
 			m_game = new GameInfo();
-
-			var timerThread = new Thread(TimerThread);
-			timerThread.Start();
 
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
 				int id = cb.m_params[0].Get<int>();
