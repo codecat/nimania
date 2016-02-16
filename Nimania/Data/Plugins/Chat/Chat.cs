@@ -29,10 +29,6 @@ namespace Nimania.Plugins
 			});
 		}
 
-		public override void Uninitialize()
-		{
-		}
-
 		public void HandleCommand(PlayerInfo player, string command, string[] args)
 		{
 			switch (command) {

@@ -15,10 +15,6 @@ namespace Nimania.Plugins
 			SendWidget();
 		}
 
-		public override void Uninitialize()
-		{
-		}
-
 		public override void OnBeginChallenge()
 		{
 			SendWidget();

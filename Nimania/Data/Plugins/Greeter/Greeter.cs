@@ -19,10 +19,6 @@ namespace Nimania.Plugins
 			m_leaveMessages = m_config.GetArray("Messages", "Greeter.LeaveMessage");
 		}
 
-		public override void Uninitialize()
-		{
-		}
-
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			m_remote.Query("GetDetailedPlayerInfo", (GbxResponse res) => {

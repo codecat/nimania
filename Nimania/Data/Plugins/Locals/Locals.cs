@@ -31,10 +31,6 @@ namespace Nimania.Plugins
 			}
 		}
 
-		public override void Uninitialize()
-		{
-		}
-
 		public override void OnBeginChallenge()
 		{
 			ReloadMapInfo();

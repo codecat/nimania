@@ -25,10 +25,6 @@ namespace Nimania.Plugins
 			OnBeginChallenge();
 		}
 
-		public override void Uninitialize()
-		{
-		}
-
 		public override void OnBeginChallenge()
 		{
 			m_cpCount = m_game.m_currentMap.m_nCheckpoints;

@@ -19,8 +19,8 @@ namespace Nimania.Runtime
 
 		public static Random m_random = new Random();
 
-		public abstract void Initialize();
-		public abstract void Uninitialize();
+		public virtual void Initialize() { }
+		public virtual void Uninitialize() { }
 
 		public virtual void EverySecond() { }
 
