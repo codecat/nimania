@@ -63,21 +63,22 @@ namespace Nimania
 			string dbDriverName = m_config["Database.Driver"];
 			switch (dbDriverName.ToLower()) {
 				case "mysql": m_database = new Mysql(m_config); break;
+				default: throw new Exception("Unknown database driver: " + dbDriverName);
 			}
 
 			m_remote = new GbxRemote();
 			m_remote.Connect(m_config["Server.Host"], m_config.GetInt("Server.Port"));
 
-			bool loginOK = false;
+			bool loginOk = false;
 			m_remote.Query("Authenticate", (GbxResponse res) => {
 				if (res == null) {
 					Console.WriteLine("Authentication failed!");
 					return;
 				}
-				loginOK = true;
+				loginOk = true;
 			}, m_config["Server.Username"], m_config["Server.Password"]).Wait();
 
-			if (!loginOK) {
+			if (!loginOk) {
 				return;
 			}
 
@@ -124,7 +125,7 @@ namespace Nimania
 
 				Console.WriteLine("User \"" + login + "\" called action \"" + action + "\"");
 
-				string[] parse = action.Split(new char[] { '.' }, 2);
+				string[] parse = action.Split(new[] { '.' }, 2);
 				if (parse.Length != 2) {
 					Console.WriteLine("Invalid action format, must be like: \"Plugin.ActionName\"");
 					return;
@@ -150,8 +151,11 @@ namespace Nimania
 				string message = cb.m_params[2].Get<string>();
 				bool command = cb.m_params[3].Get<bool>();
 
-				//TODO: Change to 'command', because on local servers, command is always false
-				if (true) { // command) {
+				if (m_config.GetBool("Server.Local") && message.StartsWith("/")) {
+					command = true;
+				}
+
+				if (command) {
 					var player = m_game.GetPlayer(id);
 
 					switch (message) {
@@ -187,10 +191,10 @@ namespace Nimania
 
 				results = m_remote.MultiQueryWait(new GbxMultiCall() {
 					m_methodName = "GetPlayerList", // 0
-					m_methodParams = new int[] { 255, 0, 0 }
+					m_methodParams = new[] { 255, 0, 0 }
 				}, new GbxMultiCall() {
 					m_methodName = "GetCurrentRanking", // 1
-					m_methodParams = new int[] { 255, 0 }
+					m_methodParams = new[] { 255, 0 }
 				});
 
 				{
