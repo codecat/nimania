@@ -120,7 +120,7 @@ namespace Nimble.XML
           if (c == '<') {
             // if there's useful content in the text node buffer
             if (strValueTextNodes.Length > 0) {
-              string strTextNodeContent = strValueTextNodes.ToString().Trim(new char[] { '\r', '\n', '\t' });
+              string strTextNodeContent = strValueTextNodes.ToString().Trim(new[] { '\r', '\n', '\t' });
               if (strTextNodeContent.Length > 0) {
                 // add the text node to the children
                 tagTextNode.Value = WebUtility.HtmlDecode(strTextNodeContent);
@@ -156,7 +156,7 @@ namespace Nimble.XML
 
         // if there's useful content in the text node buffer
         if (strValueTextNodes.Length > 0) {
-          string strTextNodeContent = strValueTextNodes.ToString().Trim(new char[] { '\r', '\n', '\t' });
+          string strTextNodeContent = strValueTextNodes.ToString().Trim(new[] { '\r', '\n', '\t' });
           if (strTextNodeContent.Length > 0) {
             // add the text node to the children
             tagTextNode.Value = WebUtility.HtmlDecode(strValueTextNodes.ToString());

@@ -48,7 +48,7 @@ namespace Nimania.Runtime
 						throw new Exception("Unexpected key/value pair on line " + currLine + " while reading " + filename);
 					}
 
-					string[] parse = line.Split(new char[] { '=' }, 2);
+					string[] parse = line.Split(new[] { '=' }, 2);
 					if (parse.Length != 2) {
 						throw new Exception("Unexpected key on line " + currLine + " while reading " + filename);
 					}
@@ -78,7 +78,7 @@ namespace Nimania.Runtime
 
 		public string GetString(string query)
 		{
-			string[] parse = query.Split(new char[] { '.' }, 2);
+			string[] parse = query.Split(new[] { '.' }, 2);
 			if (parse.Length != 2) {
 				throw new Exception("Invalid indexer format '" + query + "'");
 			}

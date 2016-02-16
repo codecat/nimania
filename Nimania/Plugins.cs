@@ -9,7 +9,7 @@ using Nimania.Runtime.DbModels;
 using CSScriptLibrary;
 using System.IO;
 
-namespace Nimania.Runtime
+namespace Nimania
 {
 	public class PluginManager
 	{
@@ -63,10 +63,11 @@ namespace Nimania.Runtime
 
 			foreach (var module in m_scripting) {
 				var o = module.TryCreateObject(name);
-				if (o != null) {
-					newPlugin = (Plugin)o;
-					break;
+				if (o == null) {
+					continue;
 				}
+				newPlugin = (Plugin)o;
+				break;
 			}
 
 			if (newPlugin == null) {
@@ -77,7 +78,7 @@ namespace Nimania.Runtime
 			newPlugin.m_config = m_config;
 			newPlugin.m_remote = m_remote;
 			newPlugin.m_database = m_database;
-			m_plugins.Add(newPlugin);
+			Add(newPlugin);
 			return newPlugin;
 		}
 
@@ -86,7 +87,9 @@ namespace Nimania.Runtime
 			if (m_initialized) {
 				throw new Exception("Can't add new plugins when plugins are already initialized.");
 			}
-			m_plugins.Add(plugin);
+			lock (m_plugins) {
+				m_plugins.Add(plugin);
+			}
 		}
 
 		public void Initialize()
@@ -108,18 +111,22 @@ namespace Nimania.Runtime
 			if (!m_initialized) {
 				throw new Exception("Plugins aren't initialized in the first place.");
 			}
-			while (m_plugins.Count > 0) {
-				m_plugins[0].Uninitialize();
-				m_plugins.RemoveAt(0);
+			lock (m_plugins) {
+				while (m_plugins.Count > 0) {
+					m_plugins[0].Uninitialize();
+					m_plugins.RemoveAt(0);
+				}
 			}
 			m_initialized = false;
 		}
 
 		public Plugin GetPlugin(string name)
 		{
-			foreach (var plugin in m_plugins) {
-				if (plugin.GetType().Name == name) {
-					return plugin;
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					if (plugin.GetType().Name == name) {
+						return plugin;
+					}
 				}
 			}
 			return null;
