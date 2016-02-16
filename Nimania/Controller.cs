@@ -21,7 +21,8 @@ namespace Nimania
 		public GbxRemote m_remote;
 		public DbDriver m_database;
 
-		private PluginManager m_plugins;
+		//TODO: This should not be public, but Developer plugin uses this!
+		public PluginManager m_plugins;
 
 		public GameInfo m_game;
 
@@ -92,6 +93,8 @@ namespace Nimania
 				var newPlugin = m_plugins.Load(name);
 				if (newPlugin != null) {
 					newPlugin.m_game = m_game;
+				} else {
+					m_remote.Execute("ChatSendServerMessage", "$fffNimania: $f00Failed $fffto load plugin $666" + name);
 				}
 			}
 			m_plugins.Initialize();

@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manialink version="2" id="DeveloperBar">
 	<frame posn="74 76">
-		<quad sizen="40 8" bgcolor="F002" />
-		<quad sizen="40 8" style="Bgs1" substyle="BgDialogBlur" />
+		<quad sizen="40 18" bgcolor="F002" />
+		<quad sizen="40 18" style="Bgs1" substyle="BgDialogBlur" />
 		<quad posn="1 -1 2 1" sizen="6 6" style="Icons128x128_1" substyle="ProfileVehicle" action="Developer.Reload" />
-		<label text="$a00Dev Control" sizen="13" posn="8 -2.5" style="StyleTextScriptEditor" />
+		<label text="$fffDev Control" sizen="15" posn="8 -2.5" style="StyleTextScriptEditor" />
 		<quad posn="33 -1 2 1" sizen="6 6" style="Icons64x64_1" substyle="QuitRace" action="Developer.Shutdown" />
+		<label text="$fffPlugins: $ff0<?=plugin_count?>" sizen="38" posn="1 -8.5" style="StyleTextScriptEditor" />
+		<label text="$fff Errors: $ff0<?=plugin_errors?>" sizen="38" posn="1 -12.5" style="StyleTextScriptEditor" />
 	</frame>
 </manialink>

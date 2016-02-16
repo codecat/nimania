@@ -13,14 +13,17 @@ namespace Nimania.Runtime
 {
 	public class PluginManager
 	{
-		private List<Plugin> m_plugins = new List<Plugin>();
+		//TODO: This should not be public, but Developer plugin uses this!
+		public List<Plugin> m_plugins = new List<Plugin>();
 		private bool m_initialized = false;
+
+		public int m_errorCount = 0;
 
 		private ConfigFile m_config;
 		private GbxRemote m_remote;
 		private DbDriver m_database;
 
-		private AsmHelper m_scripting;
+		private List<AsmHelper> m_scripting = new List<AsmHelper>();
 
 		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
@@ -29,34 +32,41 @@ namespace Nimania.Runtime
 			m_database = dbDriver;
 
 #if DEBUG
-			string[] scriptFiles = Directory.GetFiles("../../Data/Plugins/", "*.cs", SearchOption.AllDirectories);
+			string[] scriptPaths = Directory.GetDirectories("../../Data/Plugins/");
 #else
-			string[] scriptFiles = Directory.GetFiles("Data/Plugins/", "*.cs", SearchOption.AllDirectories);
+			string[] scriptPaths = Directory.GetDirectories("Data/Plugins/");
 #endif
 
-			Console.WriteLine("Compiling " + scriptFiles.Length + " scripts:");
-			foreach (var fnm in scriptFiles) {
-				Console.WriteLine("  " + fnm);
-			}
+			string[] asmRefs = new string[] { "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2" };
 
-			try {
-				m_scripting = new AsmHelper(CSScript.LoadFiles(scriptFiles, "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2"));
-			} catch (Exception ex) {
-				Console.WriteLine("Couldn't compile scripts:");
-				Console.WriteLine("  " + ex.ToString());
-				m_scripting = null;
+			var tasks = new List<Task>();
+			foreach (var path in scriptPaths) {
+				tasks.Add(Task.Factory.StartNew(() => {
+					string[] scriptFiles = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
+					try {
+						var asm = new AsmHelper(CSScript.LoadFiles(scriptFiles, asmRefs));
+						m_scripting.Add(asm);
+						Console.WriteLine("Compiled module: " + path);
+					} catch (Exception ex) {
+						Console.WriteLine("ERROR: Couldn't compile module:");
+						Console.WriteLine("  " + ex.ToString());
+						m_errorCount++;
+					}
+				}));
 			}
+			Task.WaitAll(tasks.ToArray());
 		}
 
 		public Plugin Load(string name)
 		{
 			Plugin newPlugin = null;
-			switch (name) {
-				default:
-					if (m_scripting != null) {
-						newPlugin = (Plugin)m_scripting.CreateObject(name);
-					}
+
+			foreach (var module in m_scripting) {
+				var o = module.TryCreateObject(name);
+				if (o != null) {
+					newPlugin = (Plugin)o;
 					break;
+				}
 			}
 
 			if (newPlugin == null) {

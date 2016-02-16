@@ -14,7 +14,7 @@ namespace Nimania.Plugins
 			lock (m_game.m_players) {
 				foreach (var player in m_game.m_players) {
 					if (player.IsDeveloper) {
-						SendViewToLogin(player.m_login, "Developer/Bar.xml");
+						SendWidget(player.m_login);
 					}
 				}
 			}
@@ -27,8 +27,16 @@ namespace Nimania.Plugins
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
 			if (player.IsDeveloper) {
-				SendViewToLogin(player.m_login, "Developer/Bar.xml");
+				SendWidget(player.m_login);
 			}
+		}
+
+		public void SendWidget(string login)
+		{
+			var pluginManager = Program.CurrentController.m_plugins;
+			SendViewToLogin(login, "Developer/Bar.xml",
+				"plugin_count", pluginManager.m_plugins.Count.ToString(),
+				"plugin_errors", pluginManager.m_errorCount.ToString());
 		}
 
 		public override void OnAction(PlayerInfo player, string action)

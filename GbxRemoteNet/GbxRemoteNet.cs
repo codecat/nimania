@@ -308,6 +308,9 @@ namespace GbxRemoteNet
 
 		public void WriteMessage(string strXml, uint handle)
 		{
+			if (!m_keepReading) {
+				return;
+			}
 			m_writeMutex.WaitOne();
 			m_writer.Write((uint)strXml.Length);
 			m_writer.Write(handle);
