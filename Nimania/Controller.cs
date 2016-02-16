@@ -26,7 +26,7 @@ namespace Nimania
 
 		public GameInfo m_game;
 
-		private bool m_runningTimer;
+		private bool m_runningTimer = true;
 
 		public Controller(string configFilename)
 		{
