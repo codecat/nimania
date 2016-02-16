@@ -17,5 +17,11 @@ namespace Nimania.Runtime.DbModels
 		public string FileName;
 
 		public int m_nCheckpoints;
+
+		public int m_timeBronze;
+		public int m_timeSilver;
+		public int m_timeGold;
+		public int m_timeAuthor;
+		public bool m_laps;
 	}
 }

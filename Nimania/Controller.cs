@@ -362,6 +362,13 @@ namespace Nimania
 				map.FileName = val.Get<string>("FileName");
 				map.Save();
 			}
+			map.m_nCheckpoints = val.Get<int>("NbCheckpoints");
+
+			map.m_timeBronze = val.Get<int>("BronzeTime");
+			map.m_timeSilver = val.Get<int>("SilverTime");
+			map.m_timeGold = val.Get<int>("GoldTime");
+			map.m_timeAuthor = val.Get<int>("AuthorTime");
+			map.m_laps = val.Get<bool>("LapRace");
 			return map;
 		}
 	}

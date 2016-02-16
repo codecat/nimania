@@ -31,12 +31,9 @@ namespace Nimania.Plugins
 
 		public override void OnBeginChallenge()
 		{
-			m_remote.Query("GetCurrentChallengeInfo", (GbxResponse res) => {
-				m_cpCount = res.m_value.Get<int>("NbCheckpoints");
-
-				m_cps.Clear();
-				SendWidget();
-			});
+			m_cpCount = m_game.m_currentMap.m_nCheckpoints;
+			m_cps.Clear();
+			SendWidget();
 		}
 
 		public override void OnPlayerConnect(PlayerInfo player)
