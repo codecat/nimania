@@ -70,13 +70,22 @@ namespace Nimania.Plugins
 				int n = 0;
 				for (int i = 0; i < ct; i++) {
 					var player = players[i];
-					if (player.m_bestTime == -1) {
+
+					// Filter players without times in TA
+					if (m_game.m_serverGameMode == 2 && player.m_bestTime == -1) {
 						continue;
 					}
+
+					// Filter players without points in rounds
+					if (m_game.m_serverGameMode == 1 && player.m_score == 0) {
+						continue;
+					}
+
 					string viewName = "Live/ItemTime.xml";
 					if (m_game.m_serverGameMode == 1) { // Rounds
 						viewName = "Live/ItemPoints.xml";
 					}
+
 					xmlItems += GetView(viewName,
 						"y", (-3.5 * n).ToString(),
 						"place", (n + 1).ToString(),
