@@ -10,7 +10,9 @@ namespace Nimania.Plugins
 {
 	public class Live : Plugin
 	{
-		public int m_gamemode;
+		const int MAX_SHOW_PLAYERS = 7; //TODO: This sucks.
+
+		public int m_scoreLimit;
 
 		public override void Initialize()
 		{
@@ -22,10 +24,15 @@ namespace Nimania.Plugins
 			ReloadMapInfo();
 		}
 
+		public override void OnEndRound()
+		{
+			SendWidget();
+		}
+
 		public void ReloadMapInfo()
 		{
-			m_remote.Query("GetGameMode", (GbxResponse res) => {
-				m_gamemode = res.m_value.Get<int>();
+			m_remote.Query("GetRoundPointsLimit", (GbxResponse res) => {
+				m_scoreLimit = res.m_value.Get<int>("CurrentValue");
 				SendWidget();
 			});
 		}
@@ -59,22 +66,24 @@ namespace Nimania.Plugins
 					}
 					return 0;
 				});
-				int ct = Math.Min(players.Count, 7);
+				int ct = Math.Min(players.Count, MAX_SHOW_PLAYERS);
 				int n = 0;
 				for (int i = 0; i < ct; i++) {
 					var player = players[i];
 					if (player.m_bestTime == -1) {
 						continue;
 					}
-					string viewName = "Locals/ItemTime.xml";
-					if (m_gamemode == 1) { // Rounds
-						viewName = "Locals/ItemPoints.xml";
+					string viewName = "Live/ItemTime.xml";
+					if (m_game.m_serverGameMode == 1) { // Rounds
+						viewName = "Live/ItemPoints.xml";
 					}
-					xmlItems += GetView("Locals/ItemTime.xml",
+					xmlItems += GetView(viewName,
 						"y", (-3.5 * n).ToString(),
 						"place", (n + 1).ToString(),
 						"name", Utils.XmlEntities(player.NoLinkNickname),
-						"time", Utils.TimeString(player.m_bestTime));
+						"time", Utils.TimeString(player.m_bestTime),
+						"score", player.m_score.ToString(),
+						"scoreleft", (m_scoreLimit - player.m_score).ToString());
 					n++;
 				}
 			}

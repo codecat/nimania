@@ -91,6 +91,7 @@ namespace Nimania.Plugins
 					switch (args[0].ToLower()) {
 						case "normal":
 							foundSystem = true;
+							// 10, 6, 4, 3, 2, 1
 							break;
 
 						case "motogp":

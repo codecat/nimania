@@ -184,6 +184,17 @@ namespace Nimania
 			Task.WaitAll(tasks.ToArray());
 		}
 
+		public void OnEndRound()
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnEndRound();
+					});
+				}
+			}
+		}
+
 		public void OnPlayerBegin(PlayerInfo player)
 		{
 			lock (m_plugins) {

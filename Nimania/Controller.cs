@@ -223,7 +223,22 @@ namespace Nimania
 						player.m_lastTime = -1;
 					}
 				}
-				m_plugins.OnBeginChallenge();
+				m_remote.Query("GetGameMode", (GbxResponse res) => {
+					m_game.m_serverGameMode = res.m_value.Get<int>();
+					m_plugins.OnBeginChallenge();
+				});
+			});
+
+			m_remote.AddCallback("TrackMania.EndRound", (GbxCallback cb) => {
+				m_remote.Query("GetCurrentRanking", (GbxResponse res) => {
+					var players = res.m_value.Get<ArrayList>();
+					foreach (GbxValue player in players) {
+						int id = player.Get<int>("PlayerId");
+						var ply = m_game.GetPlayer(id);
+						ply.m_score = player.Get<int>("Score");
+					}
+					m_plugins.OnEndRound();
+				}, 255, 0);
 			});
 
 			m_remote.AddCallback("TrackMania.EndChallenge", (GbxCallback cb) => {

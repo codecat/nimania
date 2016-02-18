@@ -36,6 +36,8 @@ namespace Nimania.Runtime
 		public virtual void OnPlayerConnect(PlayerInfo player) { }
 		public virtual void OnPlayerDisconnect(PlayerInfo player) { }
 
+		public virtual void OnEndRound() { }
+
 		// Trackmania synced callbacks
 		public virtual void OnPlayerBegin(PlayerInfo player) { } // called on retire and begin of 321go
 		public virtual void OnPlayerCheckpoint(PlayerInfo player, int n, int time) { }
