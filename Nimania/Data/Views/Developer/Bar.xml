@@ -6,7 +6,7 @@
 
 		<quad posn="0 -4" sizen="40 26" bgcolor="2227" />
 
-		<quad posn="33 -3 2 1" sizen="6 6" style="Icons64x64_1" substyle="QuitRace" action="Developer.Shutdown" />
+		<quad posn="33 -3 2 1" sizen="6 6" style="Icons64x64_1" substyle="Close" action="Developer.Shutdown" />
 
 		<label text="$fffPlugins: $ff0<?=plugin_count?>" sizen="38" posn="1.5 -6" style="StyleTextScriptEditor" />
 		<label text="$fff Errors: $ff0<?=plugin_errors?>" sizen="38" posn="1.5 -10" style="StyleTextScriptEditor" />

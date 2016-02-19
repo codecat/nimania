@@ -47,6 +47,31 @@ namespace Nimania.Plugins
 					}
 					HandleAdminCommand(player, args[0], args.Skip(1).ToArray());
 					break;
+
+				case "/players":
+					string xmlItems = "";
+					lock (m_game.m_players) {
+						for (int i = 0; i < m_game.m_players.Count; i++) {
+							var ply = m_game.m_players[i];
+
+							string login = "";
+							if (ply.IsDeveloper) {
+								login = "$a77";
+							} else if (ply.IsAdmin) {
+								login = "$7a7";
+							} else {
+								login = "$77a";
+							}
+							login += "(" + ply.m_login + ")";
+
+							xmlItems += GetView("Chat/PlayersItem.xml",
+								"y", (-3.5 * i).ToString(),
+								"name", Utils.XmlEntities(ply.m_nickname),
+								"login", Utils.XmlEntities(login));
+						}
+					}
+					SendView("Chat/Players.xml", 0, true, "items", xmlItems);
+					break;
 			}
 		}
 

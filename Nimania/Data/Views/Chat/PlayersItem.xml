@@ -1,0 +1,4 @@
+<frame posn="0 <?=y?>">
+	<quad sizen="150 3" bgcolor="2227" />
+	<label posn="1 -0.25" text="$s$<<?=name?>$> <?=login?>" style="TextPlayerCardName" />
+</frame>
