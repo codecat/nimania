@@ -463,41 +463,44 @@ namespace GbxRemoteNet
 			}
 		}
 
-		internal void DumpInfoInternal(int depth, bool asDebug)
+		internal void DumpInfoInternal(int depth, bool asDebug, string structKey = "")
 		{
 			string indent = "";
 			for (int i = 0; i < depth; i++) {
 				indent += "  ";
 			}
+			string keyInfo = "";
+			if (structKey != "") {
+				keyInfo = "[" + structKey + "]: ";
+			}
 			if (m_type == GbxValueType.Boolean) {
-				DrumpInfoString(asDebug, indent + "(boolean) " + ((bool)m_obj));
+				DrumpInfoString(asDebug, indent + keyInfo + "(boolean) " + ((bool)m_obj));
 			} else if (m_type == GbxValueType.Integer) {
-				DrumpInfoString(asDebug, indent + "(int) " + ((int)m_obj));
+				DrumpInfoString(asDebug, indent + keyInfo + "(int) " + ((int)m_obj));
 			} else if (m_type == GbxValueType.Double) {
-				DrumpInfoString(asDebug, indent + "(double) " + ((double)m_obj));
+				DrumpInfoString(asDebug, indent + keyInfo + "(double) " + ((double)m_obj));
 			} else if (m_type == GbxValueType.String) {
-				DrumpInfoString(asDebug, indent + "(string) \"" + ((string)m_obj) + "\"");
+				DrumpInfoString(asDebug, indent + keyInfo + "(string) \"" + ((string)m_obj) + "\"");
 			} else if (m_type == GbxValueType.Base64) {
-				DrumpInfoString(asDebug, indent + "(base64) " + ((byte[])m_obj).Length + " bytes");
+				DrumpInfoString(asDebug, indent + keyInfo + "(base64) " + ((byte[])m_obj).Length + " bytes");
 			} else if (m_type == GbxValueType.DateTime) {
-				DrumpInfoString(asDebug, indent + "(datetime) " + ((DateTime)m_obj));
+				DrumpInfoString(asDebug, indent + keyInfo + "(datetime) " + ((DateTime)m_obj));
 			} else if (m_type == GbxValueType.Array) {
-				DrumpInfoString(asDebug, indent + "(array) [");
+				DrumpInfoString(asDebug, indent + keyInfo + "(array) [");
 				var arr = (ArrayList)m_obj;
 				foreach (GbxValue v in arr) {
 					v.DumpInfoInternal(depth + 1, asDebug);
 				}
 				DrumpInfoString(asDebug, indent + "]");
 			} else if (m_type == GbxValueType.Struct) {
-				DrumpInfoString(asDebug, indent + "(struct) {");
+				DrumpInfoString(asDebug, indent + keyInfo + "(struct) {");
 				var dic = (Dictionary<string, GbxValue>)m_obj;
 				foreach (var key in dic.Keys) {
-					DrumpInfoString(asDebug, indent + "  \"" + key + "\":");
-					dic[key].DumpInfoInternal(depth + 1, asDebug);
+					dic[key].DumpInfoInternal(depth + 1, asDebug, key);
 				}
 				DrumpInfoString(asDebug, indent + "}");
 			} else {
-				DrumpInfoString(asDebug, indent + "(unknown)");
+				DrumpInfoString(asDebug, indent + keyInfo + "(unknown)");
 			}
 		}
 	}
