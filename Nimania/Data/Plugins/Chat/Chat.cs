@@ -70,7 +70,7 @@ namespace Nimania.Plugins
 								"login", Utils.XmlEntities(login));
 						}
 					}
-					SendView("Chat/Players.xml", 0, true, "items", xmlItems);
+					SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true, "items", xmlItems);
 					break;
 			}
 		}

@@ -52,6 +52,7 @@
     <Compile Include="DbModels\LocalTime.cs" />
     <Compile Include="DbModels\Map.cs" />
     <Compile Include="DbModels\LocalPlayer.cs" />
+    <Compile Include="DbModels\MapVote.cs" />
     <Compile Include="GameInfo.cs" />
     <Compile Include="PlayerInfo.cs" />
     <Compile Include="Plugin.cs" />

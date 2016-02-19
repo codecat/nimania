@@ -15,6 +15,8 @@ namespace Nimania.Runtime.DbModels
 		public string Name;
 		public string Author;
 		public string FileName;
+		public int Karma;
+		public int KarmaVotes;
 
 		public int m_nCheckpoints;
 
