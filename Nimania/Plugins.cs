@@ -40,7 +40,7 @@ namespace Nimania
 			string[] scriptPaths = Directory.GetDirectories("Data/Plugins/");
 #endif
 
-			string[] asmRefs = new string[] { "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2" };
+			string[] asmRefs = new string[] { "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2", "NLog" };
 
 			var tasks = new List<Task>();
 			foreach (var path in scriptPaths) {
