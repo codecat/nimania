@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using NLog;
 
 namespace GbxRemoteNet.CLI
 {
 	class Program
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		static List<string> m_commands = new List<string>();
 		static string m_serverLogin = "";
 
@@ -148,7 +151,7 @@ namespace GbxRemoteNet.CLI
 							case "Admin": serverAuthLevel = 1; break;
 						}
 					}
-					res.DumpInfo();
+					//NOTE: No need to dump the GbxValue here, trace logging takes care of that already
 				}, funcArgs.ToArray()).Wait();
 			}
 
