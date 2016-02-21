@@ -6,11 +6,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
+using NLog;
 
 namespace Nimania.Runtime.DbDrivers
 {
 	public class Mysql : DbDriver
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		private string m_connectionString;
 		private MySqlConnection m_connection;
 
@@ -32,7 +35,7 @@ namespace Nimania.Runtime.DbDrivers
 					m_connection.Open();
 					break;
 				} catch {
-					Console.WriteLine("MySQL seems dead. Retrying..");
+					m_logger.Error("MySQL seems dead. Retrying..");
 				}
 			}
 		}
@@ -47,8 +50,7 @@ namespace Nimania.Runtime.DbDrivers
 			try {
 				dr = dbcmd.ExecuteReader();
 			} catch (Exception ex) {
-				Console.WriteLine("\n********************************************\nQUERY ERROR:\n" +
-					ex.Message + "\n\nQUERY WAS:\n" + qry + "\n********************************************");
+				m_logger.Error("Query error: \"{0}\", query was: \"{1}\"", ex.Message, qry);
 			}
 
 			if (dr == null && m_connection.State != ConnectionState.Connecting) {
@@ -78,8 +80,7 @@ namespace Nimania.Runtime.DbDrivers
 			try {
 				ret = dbcmd.ExecuteScalar();
 			} catch (Exception ex) {
-				Console.WriteLine("\n********************************************\nQUERY ERROR:\n" +
-					ex.Message + "\n\nQUERY WAS:\n" + qry + "\n********************************************");
+				m_logger.Error("Query error: \"{0}\", query was: \"{1}\"", ex.Message, qry);
 			}
 			m_threadLock.ReleaseMutex();
 			return Convert.ToInt32(ret);

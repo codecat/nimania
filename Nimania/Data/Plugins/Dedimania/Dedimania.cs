@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CookComputing.XmlRpc;
 using GbxRemoteNet;
 using Nimania.Runtime;
+using NLog;
 
 // These dedimania people wanna know /all/ the things about our server..
 
@@ -23,6 +24,8 @@ namespace Nimania.Plugins
 
 	public class Dedimania : Plugin
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public List<DediTime> m_dediTimes = new List<DediTime>();
 		public int m_maxDedi = 0;
 		public int m_currentTop1 = -1;
@@ -56,7 +59,7 @@ namespace Nimania.Plugins
 		public void StartSession()
 		{
 			Task.Factory.StartNew(() => {
-				Console.WriteLine("Starting a new Dedimania session..");
+				m_logger.Debug("Starting a new Dedimania session..");
 
 				string serverPath = m_remote.QueryWait("GetDetailedPlayerInfo", m_config["Server.Login"]).m_value.Get<string>("Path");
 				string serverPackmask = m_remote.QueryWait("GetServerPackMask").m_value.Get<string>();
@@ -82,9 +85,9 @@ namespace Nimania.Plugins
 						Version = "1.000"
 					});
 					m_apiSession = resDedi.SessionId;
-					Console.WriteLine("Dedimania session id: " + m_apiSession);
+					m_logger.Debug("Dedimania session id: " + m_apiSession);
 				} catch {
-					Console.WriteLine("Failed to open session with Dedimania!");
+					m_logger.Error("Failed to open session with Dedimania!");
 				}
 
 				ReloadMapInfo();
@@ -117,9 +120,9 @@ namespace Nimania.Plugins
 					UId = m_game.m_currentMap.UId
 				}, dpu.ToArray());
 				if (!ok) {
-					Console.WriteLine("Unexpected Dedimania response on UpdateServerPlayers!");
+					m_logger.Error("Unexpected Dedimania response on UpdateServerPlayers!");
 				} else {
-					Console.WriteLine("Dedimania heartbeat sent");
+					m_logger.Debug("Dedimania heartbeat sent");
 				}
 			}
 		}
@@ -257,7 +260,7 @@ namespace Nimania.Plugins
 			}
 
 			if (!bestTime.HasValue) {
-				Console.WriteLine("No best time, not sending anything to Dedimania");
+				m_logger.Info("No best time, not sending anything to Dedimania");
 				return;
 			}
 
@@ -312,7 +315,7 @@ namespace Nimania.Plugins
 			SendWidget();
 
 			if (m_apiSession == "") {
-				Console.WriteLine("No Dedimania session!!");
+				m_logger.Warn("No Dedimania session!");
 				StartSession();
 				return;
 			}

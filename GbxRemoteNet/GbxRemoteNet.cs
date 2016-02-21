@@ -8,6 +8,7 @@ using Nimble.XML;
 using System.Collections;
 using System.Globalization;
 using System.Threading.Tasks;
+using NLog;
 
 namespace GbxRemoteNet
 {
@@ -24,6 +25,8 @@ namespace GbxRemoteNet
 
 	public class GbxRemote
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public const string DateTimeFormat = "yyyyMMdd\tHH:mm:ss";
 		public static CultureInfo Culture = new CultureInfo("en-US");
 
@@ -45,9 +48,6 @@ namespace GbxRemoteNet
 
 		uint m_requestHandle = 0x80000000;
 
-		public static bool ReportDebug = false;
-		public static bool ReportError = true;
-
 		Dictionary<string, List<OnGbxCallback>> m_callbacks = new Dictionary<string, List<OnGbxCallback>>();
 
 		public void Connect(string strHost, int iPort)
@@ -67,51 +67,11 @@ namespace GbxRemoteNet
 				throw new Exception("Unexpected protocol version: " + protocol);
 			}
 
-			PrintInfo("Connected!");
+			m_logger.Info("Connected to server {0}:{1}", strHost, iPort);
 
 			m_readThread = new Thread(new ThreadStart(ReadLoop));
 			m_keepReading = true;
 			m_readThread.Start();
-		}
-
-		internal static void FatalError(string str)
-		{
-			m_logMutex.WaitOne();
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine("[FATAL] " + str);
-			Console.ForegroundColor = ConsoleColor.Gray;
-			m_logMutex.ReleaseMutex();
-		}
-
-		internal static void PrintError(string str)
-		{
-			if (!ReportError) {
-				return;
-			}
-			m_logMutex.WaitOne();
-			Console.ForegroundColor = ConsoleColor.Red;
-			Console.WriteLine("[ERR] " + str);
-			Console.ForegroundColor = ConsoleColor.Gray;
-			m_logMutex.ReleaseMutex();
-		}
-
-		internal static void PrintDebug(string str)
-		{
-			if (!ReportDebug) {
-				return;
-			}
-			m_logMutex.WaitOne();
-			Console.WriteLine("[DBG] " + str);
-			m_logMutex.ReleaseMutex();
-		}
-
-		internal static void PrintInfo(string str)
-		{
-			m_logMutex.WaitOne();
-			Console.ForegroundColor = ConsoleColor.White;
-			Console.WriteLine("[INF] " + str);
-			Console.ForegroundColor = ConsoleColor.Gray;
-			m_logMutex.ReleaseMutex();
 		}
 
 		private void ReadLoop()
@@ -121,17 +81,17 @@ namespace GbxRemoteNet
 					uint size = m_reader.ReadUInt32();
 					uint handle = m_reader.ReadUInt32();
 					if (size == 0 || handle == 0) {
-						FatalError("Unexpected empty size or handle while reading GBX packet");
+						m_logger.Fatal("Unexpected empty size or handle while reading GBX packet");
 						return;
 					}
 					string strXml = m_reader.ReadString(size);
-					PrintDebug(size + " bytes (handle " + handle.ToString("x8") + ")");
+					m_logger.Debug("{0} bytes (handle {1:x8})", size, handle);
 					XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
 					string str = xml.Root.Children[0].Name;
 					if (str == "methodResponse") {
 						var response = xml["methodResponse"];
 						if (response.Children[0].Name == "fault") {
-							PrintError(response["fault"]["value"]["struct"].Children[1]["string"].Value);
+							m_logger.Error("Server fault: \"{0}\"", response["fault"]["value"]["struct"].Children[1]["string"].Value);
 							if (m_callbackTable.ContainsKey(handle)) {
 								var failedRequest = (GbxRequest)m_callbackTable[handle];
 								m_callbackTable.Remove(handle);
@@ -152,13 +112,13 @@ namespace GbxRemoteNet
 						var callback = request.m_callback;
 						var respType = callback.GetType().GetGenericArguments()[0];
 						if (respType.BaseType != typeof(GbxResponse) && respType != typeof(GbxResponse)) {
-							PrintError("Generic response type must inherit from GbxResponse!");
+							m_logger.Fatal("Generic response type must inherit from GbxResponse!");
 							continue;
 						}
 						var res = (GbxResponse)Activator.CreateInstance(respType);
 						res.m_value = new GbxValue(response["params"].Children[0]["value"].Children[0]);
-						if (ReportDebug) {
-							res.m_value.DumpInfo(true);
+						if (m_logger.IsTraceEnabled) {
+							res.m_value.DumpInfo();
 						}
 						Task.Factory.StartNew(() => {
 							callback.DynamicInvoke(res);
@@ -171,14 +131,12 @@ namespace GbxRemoteNet
 						var methodParams = response["params"];
 						var ret = new GbxCallback();
 						var retParams = new List<GbxValue>();
-						if (ReportDebug) {
-							PrintDebug("Callback " + methodCall + " with " + methodParams.Children.Count + " params:");
-						}
+						m_logger.Debug("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
 						foreach (var param in methodParams.Children) {
 							var v = new GbxValue(param["value"].Children[0]);
 							retParams.Add(v);
-							if (ReportDebug) {
-								v.DumpInfo(true, 1);
+							if (m_logger.IsTraceEnabled) {
+								v.DumpInfo(1);
 							}
 						}
 						ret.m_params = retParams.ToArray();
@@ -194,8 +152,8 @@ namespace GbxRemoteNet
 				} catch (Exception ex) {
 					if (ex is IOException || ex is ObjectDisposedException) {
 						if (m_keepReading) {
-							PrintError("Connection to server closed unexpectedly!");
-							PrintInfo("Reconnecting...");
+							m_logger.Error("Connection to server closed unexpectedly!");
+							m_logger.Info("Reconnecting...");
 							Connect(m_connectHost, m_connectPort);
 						}
 						return;
@@ -231,7 +189,7 @@ namespace GbxRemoteNet
 		public GbxRequest Query<T>(string strMethod, Action<T> callback, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
-			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
+			m_logger.Debug("Query({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
 
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;
@@ -299,7 +257,7 @@ namespace GbxRemoteNet
 		public void Execute(string strMethod, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
-			PrintDebug("Execute(" + strMethod + ") with " + args.Length + " args, " + strXml.Length + " bytes");
+			m_logger.Debug("Execute({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
 
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;
@@ -380,6 +338,8 @@ namespace GbxRemoteNet
 
 	public class GbxValue
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public object m_obj;
 		public GbxValueType m_type;
 
@@ -449,21 +409,12 @@ namespace GbxRemoteNet
 			return (T)table[key].m_obj;
 		}
 
-		public void DumpInfo(bool asDebug = false, int startDepth = 0)
+		public void DumpInfo(int startDepth = 0)
 		{
-			DumpInfoInternal(startDepth, asDebug);
+			DumpInfoInternal(startDepth);
 		}
 
-		internal void DrumpInfoString(bool asDebug, string s)
-		{
-			if (asDebug) {
-				GbxRemote.PrintDebug(s);
-			} else {
-				GbxRemote.PrintInfo(s);
-			}
-		}
-
-		internal void DumpInfoInternal(int depth, bool asDebug, string structKey = "")
+		internal void DumpInfoInternal(int depth, string structKey = "")
 		{
 			string indent = "";
 			for (int i = 0; i < depth; i++) {
@@ -474,33 +425,33 @@ namespace GbxRemoteNet
 				keyInfo = "[" + structKey + "]: ";
 			}
 			if (m_type == GbxValueType.Boolean) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(boolean) " + ((bool)m_obj));
+				m_logger.Trace(indent + keyInfo + "(boolean) " + ((bool)m_obj));
 			} else if (m_type == GbxValueType.Integer) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(int) " + ((int)m_obj));
+				m_logger.Trace(indent + keyInfo + "(int) " + ((int)m_obj));
 			} else if (m_type == GbxValueType.Double) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(double) " + ((double)m_obj));
+				m_logger.Trace(indent + keyInfo + "(double) " + ((double)m_obj));
 			} else if (m_type == GbxValueType.String) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(string) \"" + ((string)m_obj) + "\"");
+				m_logger.Trace(indent + keyInfo + "(string) \"" + ((string)m_obj) + "\"");
 			} else if (m_type == GbxValueType.Base64) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(base64) " + ((byte[])m_obj).Length + " bytes");
+				m_logger.Trace(indent + keyInfo + "(base64) " + ((byte[])m_obj).Length + " bytes");
 			} else if (m_type == GbxValueType.DateTime) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(datetime) " + ((DateTime)m_obj));
+				m_logger.Trace(indent + keyInfo + "(datetime) " + ((DateTime)m_obj));
 			} else if (m_type == GbxValueType.Array) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(array) [");
+				m_logger.Trace(indent + keyInfo + "(array) [");
 				var arr = (ArrayList)m_obj;
 				foreach (GbxValue v in arr) {
-					v.DumpInfoInternal(depth + 1, asDebug);
+					v.DumpInfoInternal(depth + 1);
 				}
-				DrumpInfoString(asDebug, indent + "]");
+				m_logger.Trace(indent + "]");
 			} else if (m_type == GbxValueType.Struct) {
-				DrumpInfoString(asDebug, indent + keyInfo + "(struct) {");
+				m_logger.Trace(indent + keyInfo + "(struct) {");
 				var dic = (Dictionary<string, GbxValue>)m_obj;
 				foreach (var key in dic.Keys) {
-					dic[key].DumpInfoInternal(depth + 1, asDebug, key);
+					dic[key].DumpInfoInternal(depth + 1, key);
 				}
-				DrumpInfoString(asDebug, indent + "}");
+				m_logger.Trace(indent + "}");
 			} else {
-				DrumpInfoString(asDebug, indent + keyInfo + "(unknown)");
+				m_logger.Trace(indent + keyInfo + "(unknown)");
 			}
 		}
 	}

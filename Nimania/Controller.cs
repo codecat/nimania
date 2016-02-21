@@ -10,6 +10,7 @@ using GbxRemoteNet;
 using Nimania.Runtime;
 using Nimania.Runtime.DbDrivers;
 using Nimania.Runtime.DbModels;
+using NLog;
 
 //TODO: Better (thread-safe) logging
 
@@ -17,6 +18,8 @@ namespace Nimania
 {
 	public class Controller
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public ConfigFile m_config;
 		public GbxRemote m_remote;
 		public DbDriver m_database;
@@ -68,8 +71,6 @@ namespace Nimania
 
 		public void Run()
 		{
-			GbxRemote.ReportDebug = m_config.GetBool("Debug.GbxRemote");
-
 			string dbDriverName = m_config["Database.Driver"];
 			switch (dbDriverName.ToLower()) {
 				case "mysql": m_database = new Mysql(m_config); break;
@@ -82,7 +83,7 @@ namespace Nimania
 			bool loginOk = false;
 			m_remote.Query("Authenticate", (GbxResponse res) => {
 				if (res == null) {
-					Console.WriteLine("Authentication failed!");
+					m_logger.Fatal("Authentication failed!");
 					return;
 				}
 				loginOk = true;
@@ -97,7 +98,7 @@ namespace Nimania
 
 			SetupCore();
 
-			Console.WriteLine("Loading plugins..");
+			m_logger.Info("Loading plugins..");
 			m_plugins = new PluginManager(m_config, m_remote, m_database);
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
@@ -133,17 +134,17 @@ namespace Nimania
 				string login = cb.m_params[1].Get<string>();
 				string action = cb.m_params[2].Get<string>();
 
-				Console.WriteLine("User \"" + login + "\" called action \"" + action + "\"");
+				m_logger.Debug("User \"{0}\" called action \"{1}\"", login, action);
 
 				string[] parse = action.Split(new[] { '.' }, 2);
 				if (parse.Length != 2) {
-					Console.WriteLine("Invalid action format, must be like: \"Plugin.ActionName\"");
+					m_logger.Error("Invalid action format \"{0}\", must be like: \"Plugin.ActionName\"", action);
 					return;
 				}
 
 				var plugin = m_plugins.GetPlugin(parse[0]);
 				if (plugin == null) {
-					Console.WriteLine("Plugin \"" + parse[0] + "\" not found!");
+					m_logger.Error("Plugin \"{0}\" not found for action \"{1}\"", parse[0], action);
 					return;
 				}
 

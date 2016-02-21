@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Nimania.Runtime;
+using NLog;
 
 namespace Nimania.Plugins
 {
 	public class Developer : Plugin
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public override void Initialize()
 		{
 			SendWidget();
@@ -43,7 +46,7 @@ namespace Nimania.Plugins
 		public override void OnAction(PlayerInfo player, string action)
 		{
 			if (!player.IsDeveloper) {
-				Console.WriteLine("User " + player.m_login + " tried accessing developer controls, not allowed!");
+				m_logger.Warn("User " + player.m_login + " tried accessing developer controls, not allowed!");
 				return;
 			}
 			switch (action) {

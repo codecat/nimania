@@ -5,12 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
-using Nimania.Runtime.DbModels;
+using NLog;
 
 namespace Nimania.Runtime
 {
 	public abstract class Plugin
 	{
+		private static Logger m_pluginLogger = LogManager.GetCurrentClassLogger();
+
 		public ConfigFile m_config;
 		public GbxRemote m_remote;
 		public DbDriver m_database;
@@ -91,7 +93,7 @@ namespace Nimania.Runtime
 			string xmlFilename = "Data/Views/" + file;
 #endif
 			if (!File.Exists(xmlFilename)) {
-				Console.WriteLine("View not found: " + file);
+				m_pluginLogger.Warn("View not found: " + file);
 				return "";
 			}
 			string xml = File.ReadAllText(xmlFilename);

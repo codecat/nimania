@@ -5,11 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
+using NLog;
 
 namespace Nimania.Plugins
 {
 	public class Chat : Plugin
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public override void Initialize()
 		{
 			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
@@ -78,7 +81,7 @@ namespace Nimania.Plugins
 		public void HandleAdminCommand(PlayerInfo player, string subCommand, string[] args)
 		{
 			if (!player.IsAdmin) {
-				Console.WriteLine("Don't call HandleAdminCommand if player is not admin!");
+				m_logger.Warn("Don't call HandleAdminCommand if player is not admin!");
 				return;
 			}
 			switch (subCommand) {

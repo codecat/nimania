@@ -8,11 +8,14 @@ using Nimania.Runtime;
 using Nimania.Runtime.DbModels;
 using CSScriptLibrary;
 using System.IO;
+using NLog;
 
 namespace Nimania
 {
 	public class PluginManager
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		//TODO: This should not be public, but Developer plugin uses this!
 		public List<Plugin> m_plugins = new List<Plugin>();
 		private bool m_initialized = false;
@@ -46,10 +49,9 @@ namespace Nimania
 					try {
 						var asm = new AsmHelper(CSScript.LoadFiles(scriptFiles, asmRefs));
 						m_scripting.Add(asm);
-						Console.WriteLine("Compiled module: " + path);
+						m_logger.Info("Compiled module: {0}", path);
 					} catch (Exception ex) {
-						Console.WriteLine("ERROR: Couldn't compile module:");
-						Console.WriteLine("  " + ex.ToString());
+						m_logger.Error("Couldn't compile module: {0} - {1}", path, ex.ToString());
 						m_errorCount++;
 					}
 				}));
@@ -71,7 +73,7 @@ namespace Nimania
 			}
 
 			if (newPlugin == null) {
-				Console.WriteLine("Unknown plugin: '" + name + "'");
+				m_logger.Warn("Unknown plugin: '{0}'", name);
 				return null;
 			}
 
@@ -100,9 +102,9 @@ namespace Nimania
 					plugin.Initialize();
 				}));
 			}
-			Console.WriteLine("Waiting for Initializing tasks to complete");
+			m_logger.Debug("Waiting for Initializing tasks to complete");
 			Task.WaitAll(tasks.ToArray());
-			Console.WriteLine("Done!");
+			m_logger.Debug("Done!");
 			m_initialized = true;
 		}
 
