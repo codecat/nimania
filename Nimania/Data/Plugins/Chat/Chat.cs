@@ -11,8 +11,6 @@ namespace Nimania.Plugins
 {
 	public class Chat : Plugin
 	{
-		private static Logger m_logger = LogManager.GetCurrentClassLogger();
-
 		public override void Initialize()
 		{
 			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
@@ -24,10 +22,13 @@ namespace Nimania.Plugins
 					command = true;
 				}
 
+				var player = m_game.GetPlayer(id);
 				if (command) {
+					m_logger.Info("Chat command: {0}: {1}", player.m_login, message);
 					string[] parse = message.Split(' ');
-					var player = m_game.GetPlayer(id);
 					HandleCommand(player, parse[0], parse.Skip(1).ToArray());
+				} else {
+					m_logger.Info("Chat: {0}: {1}", player.m_login, message);
 				}
 			});
 		}

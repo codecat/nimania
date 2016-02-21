@@ -10,8 +10,6 @@ namespace Nimania.Plugins
 {
 	public class Admin : Plugin
 	{
-		private static Logger m_logger = LogManager.GetCurrentClassLogger();
-
 		public override void Initialize()
 		{
 			SendWidget();

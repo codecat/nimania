@@ -11,7 +11,11 @@ namespace Nimania.Runtime
 {
 	public abstract class Plugin
 	{
-		private static Logger m_pluginLogger = LogManager.GetCurrentClassLogger();
+		protected Logger m_logger { get; private set; }
+		protected Plugin()
+		{
+			m_logger = LogManager.GetLogger(GetType().FullName);
+		}
 
 		public ConfigFile m_config;
 		public GbxRemote m_remote;
@@ -53,6 +57,7 @@ namespace Nimania.Runtime
 			if (xml == "") {
 				return;
 			}
+			m_logger.Debug("Sending view {0} to all players", file);
 			m_remote.Execute("SendDisplayManialinkPage", xml, timeout, clickHides);
 		}
 
@@ -64,6 +69,7 @@ namespace Nimania.Runtime
 			if (xml == "") {
 				return;
 			}
+			m_logger.Debug("Sending view {0} to {1}", file, login);
 			m_remote.Execute("SendDisplayManialinkPageToLogin", login, xml, timeout, clickHides);
 		}
 
@@ -93,7 +99,7 @@ namespace Nimania.Runtime
 			string xmlFilename = "Data/Views/" + file;
 #endif
 			if (!File.Exists(xmlFilename)) {
-				m_pluginLogger.Warn("View not found: " + file);
+				m_logger.Warn("View not found: " + file);
 				return "";
 			}
 			string xml = File.ReadAllText(xmlFilename);

@@ -85,7 +85,7 @@ namespace GbxRemoteNet
 						return;
 					}
 					string strXml = m_reader.ReadString(size);
-					m_logger.Debug("{0} bytes (handle {1:x8})", size, handle);
+					m_logger.Trace("{0} bytes (handle {1:x8})", size, handle);
 					XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
 					string str = xml.Root.Children[0].Name;
 					if (str == "methodResponse") {
@@ -131,7 +131,7 @@ namespace GbxRemoteNet
 						var methodParams = response["params"];
 						var ret = new GbxCallback();
 						var retParams = new List<GbxValue>();
-						m_logger.Debug("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
+						m_logger.Trace("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
 						foreach (var param in methodParams.Children) {
 							var v = new GbxValue(param["value"].Children[0]);
 							retParams.Add(v);
@@ -189,7 +189,7 @@ namespace GbxRemoteNet
 		public GbxRequest Query<T>(string strMethod, Action<T> callback, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
-			m_logger.Debug("Query({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
+			m_logger.Trace("Query({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
 
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;
@@ -257,7 +257,7 @@ namespace GbxRemoteNet
 		public void Execute(string strMethod, params dynamic[] args)
 		{
 			string strXml = GbxEncode.Encode(strMethod, args, true);
-			m_logger.Debug("Execute({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
+			m_logger.Trace("Execute({0}) with {1} args, {2} bytes", strMethod, args.Length, strXml.Length);
 
 			if (m_requestHandle == 0xffffffff) {
 				m_requestHandle = 0x80000000;

@@ -24,8 +24,6 @@ namespace Nimania.Plugins
 
 	public class Dedimania : Plugin
 	{
-		private static Logger m_logger = LogManager.GetCurrentClassLogger();
-
 		public List<DediTime> m_dediTimes = new List<DediTime>();
 		public int m_maxDedi = 0;
 		public int m_currentTop1 = -1;
