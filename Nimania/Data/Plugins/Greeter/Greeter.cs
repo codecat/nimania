@@ -21,8 +21,8 @@ namespace Nimania.Plugins
 
 		public override void OnPlayerConnect(PlayerInfo player)
 		{
-			m_remote.Query("GetDetailedPlayerInfo", (GbxResponse res) => {
-				string[] path = res.m_value.Get<string>("Path").Split('|');
+			m_remote.Query("GetDetailedPlayerInfo", (GbxValue res) => {
+				string[] path = res.Get<string>("Path").Split('|');
 
 				string from = path.Last();
 				if (path.Length > 3) {

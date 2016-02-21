@@ -50,7 +50,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GbxRemoteNet.cs" />
+    <Compile Include="BinaryStreamExtensions.cs" />
+    <Compile Include="GbxEncode.cs" />
+    <Compile Include="GbxMultiCall.cs" />
+    <Compile Include="GbxRemote.cs" />
+    <Compile Include="GbxRequest.cs" />
+    <Compile Include="GbxStruct.cs" />
+    <Compile Include="GbxValue.cs" />
     <Compile Include="Nimble\Extensions\StreamReader.cs" />
     <Compile Include="Nimble\Utils\ExternalEncoding.cs" />
     <Compile Include="Nimble\XML\XmlFile.cs" />

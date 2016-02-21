@@ -81,7 +81,7 @@ namespace Nimania
 			m_remote.Connect(m_config["Server.Host"], m_config.GetInt("Server.Port"));
 
 			bool loginOk = false;
-			m_remote.Query("Authenticate", (GbxResponse res) => {
+			m_remote.Query("Authenticate", (GbxValue res) => {
 				if (res == null) {
 					m_logger.Fatal("Authentication failed!");
 					return;
@@ -129,10 +129,10 @@ namespace Nimania
 		{
 			m_game = new GameInfo();
 
-			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				string login = cb.m_params[1].Get<string>();
-				string action = cb.m_params[2].Get<string>();
+			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxValue[] cb) => {
+				int id = cb[0].Get<int>();
+				string login = cb[1].Get<string>();
+				string action = cb[2].Get<string>();
 
 				m_logger.Debug("User \"{0}\" called action \"{1}\"", login, action);
 
@@ -164,18 +164,18 @@ namespace Nimania
 					"GetCurrentMapInfo" // 7
 				);
 
-				m_game.m_serverIP = results[0].m_value.Get<string>("PublishedIp");
-				m_game.m_serverPort = results[0].m_value.Get<int>("Port");
-				m_game.m_serverLogin = results[0].m_value.Get<string>("ServerLogin");
+				m_game.m_serverIP = results[0].Get<string>("PublishedIp");
+				m_game.m_serverPort = results[0].Get<int>("Port");
+				m_game.m_serverLogin = results[0].Get<string>("ServerLogin");
 
-				m_game.m_serverName = results[1].m_value.Get<string>();
-				m_game.m_serverComment = results[2].m_value.Get<string>();
-				m_game.m_serverPrivate = results[3].m_value.Get<int>() == 1;
-				m_game.m_serverMaxPlayers = results[4].m_value.Get<int>("CurrentValue");
-				m_game.m_serverMaxSpecs = results[5].m_value.Get<int>("CurrentValue");
-				m_game.m_serverGameMode = results[6].m_value.Get<int>();
+				m_game.m_serverName = results[1].Get<string>();
+				m_game.m_serverComment = results[2].Get<string>();
+				m_game.m_serverPrivate = results[3].Get<int>() == 1;
+				m_game.m_serverMaxPlayers = results[4].Get<int>("CurrentValue");
+				m_game.m_serverMaxSpecs = results[5].Get<int>("CurrentValue");
+				m_game.m_serverGameMode = results[6].Get<int>();
 
-				m_game.m_currentMap = LoadMapInfo(results[7].m_value);
+				m_game.m_currentMap = LoadMapInfo(results[7]);
 
 				results = m_remote.MultiQueryWait(new GbxMultiCall() {
 					m_methodName = "GetPlayerList", // 0
@@ -186,14 +186,14 @@ namespace Nimania
 				});
 
 				{
-					var players = results[0].m_value.Get<ArrayList>();
+					var players = results[0].Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						m_game.m_players.Add(LoadPlayerInfo(player));
 					}
 				}
 
 				{
-					var players = results[1].m_value.Get<ArrayList>();
+					var players = results[1].Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						int id = player.Get<int>("PlayerId");
 
@@ -215,8 +215,8 @@ namespace Nimania
 				}
 			}
 
-			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxCallback cb) => {
-				m_game.m_currentMap = LoadMapInfo(cb.m_params[0]);
+			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxValue[] cb) => {
+				m_game.m_currentMap = LoadMapInfo(cb[0]);
 				lock (m_game.m_players) {
 					foreach (var player in m_game.m_players) {
 						player.m_prevBestTime = -1;
@@ -224,15 +224,15 @@ namespace Nimania
 						player.m_lastTime = -1;
 					}
 				}
-				m_remote.Query("GetGameMode", (GbxResponse res) => {
-					m_game.m_serverGameMode = res.m_value.Get<int>();
+				m_remote.Query("GetGameMode", (GbxValue res) => {
+					m_game.m_serverGameMode = res.Get<int>();
 					m_plugins.OnBeginChallenge();
 				});
 			});
 
-			m_remote.AddCallback("TrackMania.EndRound", (GbxCallback cb) => {
-				m_remote.Query("GetCurrentRanking", (GbxResponse res) => {
-					var players = res.m_value.Get<ArrayList>();
+			m_remote.AddCallback("TrackMania.EndRound", (GbxValue[] cb) => {
+				m_remote.Query("GetCurrentRanking", (GbxValue res) => {
+					var players = res.Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						int id = player.Get<int>("PlayerId");
 						var ply = m_game.GetPlayer(id);
@@ -242,14 +242,14 @@ namespace Nimania
 				}, 255, 0);
 			});
 
-			m_remote.AddCallback("TrackMania.EndChallenge", (GbxCallback cb) => {
+			m_remote.AddCallback("TrackMania.EndChallenge", (GbxValue[] cb) => {
 				m_plugins.OnEndChallenge();
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxCallback cb) => {
-				string login = cb.m_params[0].Get<string>();
-				m_remote.Query("GetPlayerInfo", (GbxResponse res) => {
-					var playerInfo = LoadPlayerInfo(res.m_value);
+			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxValue[] cb) => {
+				string login = cb[0].Get<string>();
+				m_remote.Query("GetPlayerInfo", (GbxValue res) => {
+					var playerInfo = LoadPlayerInfo(res);
 					lock (m_game.m_players) {
 						m_game.m_players.Add(playerInfo);
 					}
@@ -257,8 +257,8 @@ namespace Nimania
 				}, login);
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerInfoChanged", (GbxCallback cb) => {
-				GbxValue val = cb.m_params[0];
+			m_remote.AddCallback("TrackMania.PlayerInfoChanged", (GbxValue[] cb) => {
+				GbxValue val = cb[0];
 				int id = val.Get<int>("PlayerId");
 
 				var player = m_game.GetPlayer(id);
@@ -271,8 +271,8 @@ namespace Nimania
 				}
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerDisconnect", (GbxCallback cb) => {
-				string login = cb.m_params[0].Get<string>();
+			m_remote.AddCallback("TrackMania.PlayerDisconnect", (GbxValue[] cb) => {
+				string login = cb[0].Get<string>();
 				var player = m_game.GetPlayer(login);
 				if (player != null) {
 					m_plugins.OnPlayerDisconect(player);
@@ -286,10 +286,10 @@ namespace Nimania
 				}
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerCheckpoint", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				int time = cb.m_params[2].Get<int>();
-				int n = cb.m_params[4].Get<int>();
+			m_remote.AddCallback("TrackMania.PlayerCheckpoint", (GbxValue[] cb) => {
+				int id = cb[0].Get<int>();
+				int time = cb[2].Get<int>();
+				int n = cb[4].Get<int>();
 
 				var player = m_game.GetPlayer(id);
 				if (player == null) {
@@ -303,9 +303,9 @@ namespace Nimania
 				m_plugins.OnPlayerCheckpoint(player, n, time);
 			});
 
-			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				int time = cb.m_params[2].Get<int>();
+			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxValue[] cb) => {
+				int id = cb[0].Get<int>();
+				int time = cb[2].Get<int>();
 
 				var player = m_game.GetPlayer(id);
 				if (player == null) {

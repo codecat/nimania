@@ -13,10 +13,10 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
-				int id = cb.m_params[0].Get<int>();
-				string message = cb.m_params[2].Get<string>();
-				bool command = cb.m_params[3].Get<bool>();
+			m_remote.AddCallback("TrackMania.PlayerChat", (GbxValue[] cb) => {
+				int id = cb[0].Get<int>();
+				string message = cb[2].Get<string>();
+				bool command = cb[3].Get<bool>();
 
 				if (m_config.GetBool("Server.Local") && message.StartsWith("/")) {
 					command = true;

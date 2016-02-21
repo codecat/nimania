@@ -38,15 +38,15 @@ namespace GbxRemoteNet.CLI
 			var rem = new GbxRemote();
 			rem.Connect(hostname, port);
 
-			rem.Query("system.listMethods", (GbxResponse res) => {
-				var methods = res.m_value.Get<ArrayList>();
+			rem.Query("system.listMethods", (GbxValue res) => {
+				var methods = res.Get<ArrayList>();
 				foreach (GbxValue method in methods) {
 					m_commands.Add(method.Get<string>());
 				}
 			}).Wait();
 
-			rem.Query("GetSystemInfo", (GbxResponse res) => {
-				m_serverLogin = res.m_value.Get<string>("ServerLogin");
+			rem.Query("GetSystemInfo", (GbxValue res) => {
+				m_serverLogin = res.Get<string>("ServerLogin");
 			}).Wait();
 
 			while (true) {
@@ -73,11 +73,11 @@ namespace GbxRemoteNet.CLI
 					if (parse.Length == 2) {
 						string command = ResolveCommand(parse[1]);
 
-						rem.Query("system.methodSignature", (GbxResponse res) => {
+						rem.Query("system.methodSignature", (GbxValue res) => {
 							if (res == null) {
 								return;
 							}
-							var sigs = res.m_value.Get<ArrayList>();
+							var sigs = res.Get<ArrayList>();
 							foreach (GbxValue sig in sigs) {
 								var sigParams = sig.Get<ArrayList>();
 								Console.Write(((GbxValue)sigParams[0]).Get<string>() + " " + command + "(");
@@ -93,11 +93,11 @@ namespace GbxRemoteNet.CLI
 							}
 						}, command).Wait();
 
-						rem.Query("system.methodHelp", (GbxResponse resHelp) => {
+						rem.Query("system.methodHelp", (GbxValue resHelp) => {
 							if (resHelp == null) {
 								return;
 							}
-							var help = resHelp.m_value.Get<string>();
+							var help = resHelp.Get<string>();
 							Console.WriteLine(help);
 						}, command).Wait();
 					}
@@ -138,17 +138,17 @@ namespace GbxRemoteNet.CLI
 				}
 
 				string runMethod = ResolveCommand(parse[0]);
-				rem.Query(runMethod, (GbxResponse res) => {
+				rem.Query(runMethod, (GbxValue res) => {
 					if (res == null) {
 						return;
 					}
-					if (runMethod == "Authenticate" && res.m_value.Get<bool>()) {
+					if (runMethod == "Authenticate" && res.Get<bool>()) {
 						switch (parse[1]) {
 							case "SuperAdmin": serverAuthLevel = 2; break;
 							case "Admin": serverAuthLevel = 1; break;
 						}
 					}
-					res.m_value.DumpInfo();
+					res.DumpInfo();
 				}, funcArgs.ToArray()).Wait();
 			}
 

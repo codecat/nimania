@@ -31,8 +31,8 @@ namespace Nimania.Plugins
 
 		public void ReloadMapInfo()
 		{
-			m_remote.Query("GetRoundPointsLimit", (GbxResponse res) => {
-				m_scoreLimit = res.m_value.Get<int>("CurrentValue");
+			m_remote.Query("GetRoundPointsLimit", (GbxValue res) => {
+				m_scoreLimit = res.Get<int>("CurrentValue");
 				SendWidget();
 			});
 		}

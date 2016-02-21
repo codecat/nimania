@@ -59,15 +59,15 @@ namespace Nimania.Plugins
 			Task.Factory.StartNew(() => {
 				m_logger.Debug("Starting a new Dedimania session..");
 
-				string serverPath = m_remote.QueryWait("GetDetailedPlayerInfo", m_config["Server.Login"]).m_value.Get<string>("Path");
-				string serverPackmask = m_remote.QueryWait("GetServerPackMask").m_value.Get<string>();
+				string serverPath = m_remote.QueryWait("GetDetailedPlayerInfo", m_config["Server.Login"]).Get<string>("Path");
+				string serverPackmask = m_remote.QueryWait("GetServerPackMask").Get<string>();
 
 				string serverVersion = "";
 				string serverBuild = "";
 
-				m_remote.Query("GetVersion", (GbxResponse res) => {
-					serverVersion = res.m_value.Get<string>("Version");
-					serverBuild = res.m_value.Get<string>("Build");
+				m_remote.Query("GetVersion", (GbxValue res) => {
+					serverVersion = res.Get<string>("Version");
+					serverBuild = res.Get<string>("Build");
 				}).Wait();
 
 				try {
@@ -208,13 +208,13 @@ namespace Nimania.Plugins
 		{
 			var dmi = new DediMapInfo();
 
-			m_remote.Query("GetCurrentChallengeInfo", (GbxResponse res) => {
-				dmi.UId = res.m_value.Get<string>("UId");
-				dmi.Name = res.m_value.Get<string>("Name");
-				dmi.Environment = res.m_value.Get<string>("Environnement"); // !!!
-				dmi.Author = res.m_value.Get<string>("Author");
-				dmi.NbCheckpoints = res.m_value.Get<int>("NbCheckpoints");
-				dmi.NbLaps = res.m_value.Get<int>("NbLaps");
+			m_remote.Query("GetCurrentChallengeInfo", (GbxValue res) => {
+				dmi.UId = res.Get<string>("UId");
+				dmi.Name = res.Get<string>("Name");
+				dmi.Environment = res.Get<string>("Environnement"); // !!!
+				dmi.Author = res.Get<string>("Author");
+				dmi.NbCheckpoints = res.Get<int>("NbCheckpoints");
+				dmi.NbLaps = res.Get<int>("NbLaps");
 			}).Wait();
 
 			return dmi;
@@ -287,7 +287,7 @@ namespace Nimania.Plugins
 				top1Replay = File.ReadAllBytes(path);
 			}
 
-			var vReplay = resVReplay.m_value.Get<byte[]>();
+			var vReplay = resVReplay.Get<byte[]>();
 
 			bool sentOk = false;
 			for (int i = 0; i < 3; i++) {

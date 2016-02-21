@@ -13,8 +13,8 @@ namespace Nimania.Plugins
 	{
 		public override void Initialize()
 		{
-			m_remote.AddCallback("TrackMania.PlayerChat", (GbxCallback cb) => {
-				string message = cb.m_params[2].Get<string>();
+			m_remote.AddCallback("TrackMania.PlayerChat", (GbxValue[] cb) => {
+				string message = cb[2].Get<string>();
 
 				int voteValue = 0;
 				if (message == "++") {
@@ -27,7 +27,7 @@ namespace Nimania.Plugins
 					return;
 				}
 
-				int id = cb.m_params[0].Get<int>();
+				int id = cb[0].Get<int>();
 				var player = m_game.GetPlayer(id);
 
 				var vote = m_database.FindByAttributes<MapVote>(
