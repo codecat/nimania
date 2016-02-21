@@ -70,6 +70,7 @@ namespace GbxRemoteNet
 		{
 			while (m_keepReading) {
 				try {
+					// read a message from server
 					uint size = m_reader.ReadUInt32();
 					uint handle = m_reader.ReadUInt32();
 					if (size == 0 || handle == 0) {
@@ -78,11 +79,18 @@ namespace GbxRemoteNet
 					}
 					string strXml = m_reader.ReadString(size);
 					m_logger.Trace("{0} bytes (handle {1:x8})", size, handle);
+
+					// parse the XML sent by the server
 					XmlFile xml = new XmlFile(new MemoryStream(Encoding.UTF8.GetBytes(strXml)));
-					string str = xml.Root.Children[0].Name;
-					if (str == "methodResponse") {
+					string strRootName = xml.Root.Children[0].Name;
+
+					// if this is a response to a request we've sent
+					if (strRootName == "methodResponse") {
 						var response = xml["methodResponse"];
+
+						// there could have been an error
 						if (response.Children[0].Name == "fault") {
+							// report it and pass null to our callback
 							m_logger.Error("Server fault: \"{0}\"", response["fault"]["value"]["struct"].Children[1]["string"].Value);
 							if (m_callbackTable.ContainsKey(handle)) {
 								var failedRequest = (GbxRequest)m_callbackTable[handle];
@@ -96,9 +104,13 @@ namespace GbxRemoteNet
 							}
 							continue;
 						}
+
+						// there might not have been a callback (Execute instead of Query)
 						if (!m_callbackTable.ContainsKey(handle)) {
 							continue;
 						}
+
+						// pass the response GbxValue in the callback
 						var request = (GbxRequest)m_callbackTable[handle];
 						m_callbackTable.Remove(handle);
 						var callback = request.m_callback;
@@ -111,12 +123,18 @@ namespace GbxRemoteNet
 							request.m_finished = true;
 							request.m_reset.Set();
 						});
-					} else if (str == "methodCall") {
+						continue;
+					}
+
+					// if this is a callback (event) reported by the server
+					if (strRootName == "methodCall") {
 						var response = xml["methodCall"];
 						var methodCall = response["methodName"].Value;
 						var methodParams = response["params"];
 						var ret = new List<GbxValue>();
 						m_logger.Trace("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
+
+						// get the callback params
 						foreach (var param in methodParams.Children) {
 							var v = new GbxValue(param["value"].Children[0]);
 							ret.Add(v);
@@ -124,6 +142,8 @@ namespace GbxRemoteNet
 								v.DumpInfo(1);
 							}
 						}
+
+						// call all registered callbacks
 						string methodCallLower = methodCall.ToLower();
 						if (m_callbacks.ContainsKey(methodCallLower)) {
 							foreach (var callback in m_callbacks[methodCallLower]) {
@@ -132,8 +152,10 @@ namespace GbxRemoteNet
 								});
 							}
 						}
+						continue;
 					}
 				} catch (Exception ex) {
+					// if the server disconnected us
 					if (ex is IOException || ex is ObjectDisposedException) {
 						if (m_keepReading) {
 							m_logger.Error("Connection to server closed unexpectedly!");
@@ -142,6 +164,8 @@ namespace GbxRemoteNet
 						}
 						return;
 					}
+
+					// it's some other exception, throw it so we can fix it
 					throw;
 				}
 			}
