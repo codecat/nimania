@@ -40,6 +40,11 @@ namespace Nimania.Plugins
 					SendChatTo(player.m_id, "$fffYou have played for: $666" + Utils.TimeStringHMS((int)(DateTime.Now - player.m_joinTime).TotalSeconds));
 					break;
 
+				case "/ragequit":
+				case "/fuckthis":
+					m_remote.Execute("SendDisplayManialinkPageToLogin", player.m_login, "<manialink><quad image=\":\"/></manialink>", 0, false);
+					break;
+
 				case "/admin":
 					if (!player.IsAdmin) {
 						SendChatTo(player.m_id, "$fffYou are not an admin.");
