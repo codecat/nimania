@@ -244,12 +244,16 @@ namespace Nimania.Plugins
 			var times = new List<DediPlayerTime>();
 			lock (m_game.m_players) {
 				foreach (var player in m_game.m_players) {
-					string checks = string.Join(",", player.m_bestCheckpoints);
+					if (player.m_bestTime == -1) {
+						continue;
+					}
+					string checks = string.Join(",", player.m_bestCheckpointsLap);
 					var time = new DediPlayerTime() {
 						Login = player.m_login,
 						Best = player.m_bestTime,
 						Checks = checks
 					};
+					m_logger.Debug("Adding time: " + time.Login + ", " + time.Best + " (" + time.Checks + ")");
 					times.Add(time);
 					if (time.Best != -1 && (!bestTime.HasValue || time.Best < bestTime.Value.Best)) {
 						bestTime = time;
@@ -292,14 +296,18 @@ namespace Nimania.Plugins
 			bool sentOk = false;
 			for (int i = 0; i < 3; i++) {
 				try {
+					var vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_checkpoints);
 					var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
 						VReplay = vReplay,
-						VReplayChecks = bestTime.Value.Checks, // TODO: Make this all checkpoints (in case of laps) or it won't validate!
+						VReplayChecks = vChecks,
 						Top1GReplay = top1Replay
 					});
 					sentOk = true;
 					break;
-				} catch { continue; }
+				} catch (Exception ex) {
+					m_logger.Error(ex.Message);
+					continue;
+				}
 			}
 			if (!sentOk) {
 				SendChat("$f00Failed $fffsending Dedmania records after 3 attempts!");

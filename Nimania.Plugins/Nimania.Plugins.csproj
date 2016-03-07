@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProjectGuid>{2D091742-FF7A-40E6-9DA5-61E4019000BB}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Nimania.Plugins</RootNamespace>
+    <AssemblyName>Nimania.Plugins</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>full</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>false</ConsolePause>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <Compile Include="..\Nimania\Data\Plugins\Admin\Admin.cs">
+      <Link>Plugins\Admin\Admin.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Chat\Chat.cs">
+      <Link>Plugins\Chat\Chat.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Checkpoints\Checkpoints.cs">
+      <Link>Plugins\Checkpoints\Checkpoints.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Dedimania\Dedimania.cs">
+      <Link>Plugins\Dedimania\Dedimania.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Dedimania\DedimaniaAPI.cs">
+      <Link>Plugins\Dedimania\DedimaniaAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Developer\Developer.cs">
+      <Link>Plugins\Developer\Developer.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Greeter\Greeter.cs">
+      <Link>Plugins\Greeter\Greeter.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Karma\Karma.cs">
+      <Link>Plugins\Karma\Karma.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Live\Live.cs">
+      <Link>Plugins\Live\Live.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\Locals\Locals.cs">
+      <Link>Plugins\Locals\Locals.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\MapInfo\MapInfo.cs">
+      <Link>Plugins\MapInfo\MapInfo.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Nimania">
+      <HintPath>..\Nimania\bin\Debug\Nimania.exe</HintPath>
+    </Reference>
+    <Reference Include="Nimania.Runtime">
+      <HintPath>..\Nimania\bin\Debug\Nimania.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="GbxRemoteNet">
+      <HintPath>..\Nimania\bin\Debug\GbxRemoteNet.dll</HintPath>
+    </Reference>
+    <Reference Include="CookComputing.XmlRpcV2">
+      <HintPath>..\Nimania\bin\Debug\CookComputing.XmlRpcV2.dll</HintPath>
+    </Reference>
+    <Reference Include="NLog">
+      <HintPath>..\Nimania\bin\Debug\NLog.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

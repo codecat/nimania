@@ -9,4 +9,11 @@
 			<?=items?>
 		</frame>
 	</frame>
+	<script><!--
+		main() {
+			log("~~ Starting dump..");
+			log(ClientUI.UILayers);
+			log("~~ Dump end!");
+		}
+	--></script>
 </manialink>

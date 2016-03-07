@@ -10,6 +10,8 @@ namespace Nimania.Runtime
 	public class PlayerInfo
 	{
 		public int m_id;
+		public bool m_connected = true;
+
 		public string m_login;
 		public string m_nickname;
 		public int m_team;
@@ -22,6 +24,7 @@ namespace Nimania.Runtime
 
 		public List<int> m_checkpoints = new List<int>();
 		public List<int> m_bestCheckpoints = new List<int>();
+		public List<int> m_bestCheckpointsLap = new List<int>();
 		public int m_prevBestTime = -1;
 		public int m_bestTime = -1;
 		public int m_lastTime = -1;

@@ -107,7 +107,7 @@ namespace Nimania.Runtime
 			if (!m_modelCache.ContainsKey(tablename)) {
 				m_modelCache.Add(tablename, new Dictionary<int, DbCache>());
 			}
-			Debug.Assert(!m_modelCache[tablename].ContainsKey(pk));
+			Utils.Assert(!m_modelCache[tablename].ContainsKey(pk));
 			m_modelCache[tablename].Add(pk, new DbCache(model));
 		}
 

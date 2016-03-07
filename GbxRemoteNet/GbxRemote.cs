@@ -132,7 +132,7 @@ namespace GbxRemoteNet
 						var methodCall = response["methodName"].Value;
 						var methodParams = response["params"];
 						var ret = new List<GbxValue>();
-						m_logger.Trace("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
+						m_logger.Debug("Callback {0} with {1} params", methodCall, methodParams.Children.Count);
 
 						// get the callback params
 						foreach (var param in methodParams.Children) {

@@ -28,7 +28,7 @@ namespace Nimania.Plugins
 					string[] parse = message.Split(' ');
 					HandleCommand(player, parse[0], parse.Skip(1).ToArray());
 				} else {
-					m_logger.Info("Chat: {0}: {1}", player.m_login, message);
+					m_logger.Info("Chat: {0}: {1}", Utils.StripFormatCodes(player.m_nickname) + " (" + player.m_login + ")", Utils.StripFormatCodes(message));
 				}
 			});
 		}
@@ -40,6 +40,7 @@ namespace Nimania.Plugins
 					SendChatTo(player.m_id, "$fffYou have played for: $666" + Utils.TimeStringHMS((int)(DateTime.Now - player.m_joinTime).TotalSeconds));
 					break;
 
+				case "/rq":
 				case "/ragequit":
 				case "/fuckthis":
 					m_remote.Execute("SendDisplayManialinkPageToLogin", player.m_login, "<manialink><quad image=\":\"/></manialink>", 0, false);

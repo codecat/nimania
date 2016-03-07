@@ -150,7 +150,7 @@ namespace Nimania
 
 				var player = m_game.GetPlayer(id);
 				if (player == null) {
-					Debug.Assert(false);
+					Utils.Assert(false);
 					return;
 				}
 
@@ -223,6 +223,14 @@ namespace Nimania
 						player.m_bestTime = -1;
 						player.m_lastTime = -1;
 					}
+					// Remove disconnected players
+					for (int i = 0; i < m_game.m_players.Count; i++) {
+						if (!m_game.m_players[i].m_connected) {
+							m_logger.Debug("Removing disconnected player '" + m_game.m_players[i].m_login + "'");
+							m_game.m_players.RemoveAt(i);
+							i--;
+						}
+					}
 				}
 				m_remote.Query("GetGameMode", (GbxValue res) => {
 					m_game.m_serverGameMode = res.Get<int>();
@@ -234,8 +242,14 @@ namespace Nimania
 				m_remote.Query("GetCurrentRanking", (GbxValue res) => {
 					var players = res.Get<ArrayList>();
 					foreach (GbxValue player in players) {
-						int id = player.Get<int>("PlayerId");
-						var ply = m_game.GetPlayer(id);
+						if (player.Get<int>("PlayerId") == 255) {
+							// player disconnected
+							m_logger.Warn("Why is '" + player.Get<string>("Login") + "' disconnected!??!?!?");
+							continue;
+						}
+						var login = player.Get<string>("Login");
+						var ply = m_game.GetPlayer(login);
+						m_logger.Debug("Updating score for player '" + login + "'");
 						ply.m_score = player.Get<int>("Score");
 					}
 					m_plugins.OnEndRound();
@@ -249,11 +263,18 @@ namespace Nimania
 			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxValue[] cb) => {
 				string login = cb[0].Get<string>();
 				m_remote.Query("GetPlayerInfo", (GbxValue res) => {
-					var playerInfo = LoadPlayerInfo(res);
-					lock (m_game.m_players) {
-						m_game.m_players.Add(playerInfo);
+					var player = m_game.GetPlayer(res.Get<string>("Login"));
+					if (player == null) {
+						player = LoadPlayerInfo(res);
+						lock (m_game.m_players) {
+							m_game.m_players.Add(player);
+						}
+					} else {
+						player.m_id = res.Get<int>("PlayerId");
+						player.m_nickname = res.Get<string>("NickName");
+						player.m_spectating = res.Get<bool>("IsSpectator");
 					}
-					m_plugins.OnPlayerConnect(playerInfo);
+					m_plugins.OnPlayerConnect(player);
 				}, login);
 			});
 
@@ -280,24 +301,25 @@ namespace Nimania
 				lock (m_game.m_players) {
 					for (int i = 0; i < m_game.m_players.Count; i++) {
 						if (m_game.m_players[i].m_login == login) {
-							m_game.m_players.RemoveAt(i);
+							m_game.m_players[i].m_connected = false;
 						}
 					}
 				}
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerCheckpoint", (GbxValue[] cb) => {
-				int id = cb[0].Get<int>();
+				string login = cb[1].Get<string>();
 				int time = cb[2].Get<int>();
 				int n = cb[4].Get<int>();
 
-				var player = m_game.GetPlayer(id);
+				var player = m_game.GetPlayer(login);
 				if (player == null) {
-					Debug.Assert(false);
+					//TODO: Fix this! Happens randomly when a player leaves and rejoins (in the same session)? Not entirely sure, but something like that!
+					//Utils.Assert(false);
 					return;
 				}
 
-				if (n + 1 > player.m_checkpoints.Count) {
+				if (n + 1 > player.m_checkpoints.Count || m_game.m_currentMap.m_laps) {
 					player.m_checkpoints.Add(time);
 				}
 				m_plugins.OnPlayerCheckpoint(player, n, time);
@@ -310,7 +332,7 @@ namespace Nimania
 				var player = m_game.GetPlayer(id);
 				if (player == null) {
 					// somehow, this happens to be the dedicated server (with dedi login) doing time 0 on retire..??
-					//Debug.Assert(false);
+					//Utils.Assert(false);
 					return;
 				}
 
@@ -325,6 +347,8 @@ namespace Nimania
 					player.m_bestTime = time;
 					player.m_bestCheckpoints.Clear();
 					player.m_bestCheckpoints.AddRange(player.m_checkpoints);
+					player.m_bestCheckpointsLap.Clear();
+					player.m_bestCheckpointsLap.AddRange(player.m_checkpoints.Skip(Math.Max(0, player.m_checkpoints.Count() - m_game.m_currentMap.m_nCheckpoints)));
 					//TODO: Distinct between all/lap checkpoints
 				}
 				player.m_lastTime = time;

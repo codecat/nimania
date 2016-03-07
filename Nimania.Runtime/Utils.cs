@@ -1,5 +1,7 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -9,6 +11,8 @@ namespace Nimania.Runtime
 {
 	public static class Utils
 	{
+		private static Logger m_logger = LogManager.GetCurrentClassLogger();
+
 		public static string TimeString(int tm)
 		{
 			int ms = tm % 1000;
@@ -67,6 +71,15 @@ namespace Nimania.Runtime
 		public static string StripLinkCodes(string s)
 		{
 			return Regex.Replace(s, "\\$([lh](\\[[^\\]]+\\])?)", "");
+		}
+
+		public static void Assert(bool b, string desc = "")
+		{
+			if (b) {
+				return;
+			}
+			m_logger.Error("Failed assertion: {0}", desc);
+			Debug.Assert(false);
 		}
 	}
 }

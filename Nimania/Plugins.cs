@@ -136,6 +136,7 @@ namespace Nimania
 
 		public void EverySecond()
 		{
+			//TODO: Change locking to individual plugin? It's deadlocking here and on Uninitialize :S
 			lock (m_plugins) {
 				foreach (var plugin in m_plugins) {
 					Task.Factory.StartNew(plugin.EverySecond);
