@@ -1,0 +1,4 @@
+<frame posn="0 <?=y?>">
+	<quad sizen="150 3" bgcolor="2227" bgcolorfocus="0007" action="Chat.QueueMap.<?=uid?>" />
+	<label posn="1 -0.25" text="$s$<<?=name?>$> - $666<?=author?>" style="TextPlayerCardName" />
+</frame>

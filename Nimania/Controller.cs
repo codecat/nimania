@@ -93,7 +93,7 @@ namespace Nimania
 				return;
 			}
 
-			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Starting 1.000");
+			m_remote.Execute("ChatSendServerMessage", "$fffNimania: $666Starting");
 			m_remote.Execute("SendHideManialinkPage");
 
 			SetupCore();
@@ -136,9 +136,9 @@ namespace Nimania
 
 				m_logger.Debug("User \"{0}\" called action \"{1}\"", login, action);
 
-				string[] parse = action.Split(new[] { '.' }, 2);
-				if (parse.Length != 2) {
-					m_logger.Error("Invalid action format \"{0}\", must be like: \"Plugin.ActionName\"", action);
+				string[] parse = action.Split(new[] { '.' });
+				if (parse.Length < 2) {
+					m_logger.Error("Invalid action format \"{0}\", must be like: \"Plugin.ActionName[.arg1.arg2]\"", action);
 					return;
 				}
 
@@ -154,7 +154,7 @@ namespace Nimania
 					return;
 				}
 
-				plugin.OnAction(player, parse[1]);
+				plugin.OnAction(player, parse[1], parse.Skip(2).ToArray());
 			});
 
 			// Wait for these because plugin Initializers might need it
@@ -183,6 +183,9 @@ namespace Nimania
 				}, new GbxMultiCall() {
 					m_methodName = "GetCurrentRanking", // 1
 					m_methodParams = new[] { 255, 0 }
+				}, new GbxMultiCall() {
+					m_methodName = "GetMapList", // 2
+					m_methodParams = new[] { 9999, 0 }
 				});
 
 				{
@@ -211,6 +214,13 @@ namespace Nimania
 								ply.m_bestCheckpoints.Add(cpt);
 							}
 						}
+					}
+				}
+
+				{
+					var maps = results[2].Get<ArrayList>();
+					foreach (GbxValue map in maps) {
+						m_game.m_maps.Add(LoadMapInfo(map));
 					}
 				}
 			}
@@ -243,13 +253,10 @@ namespace Nimania
 					var players = res.Get<ArrayList>();
 					foreach (GbxValue player in players) {
 						if (player.Get<int>("PlayerId") == 255) {
-							// player disconnected
-							m_logger.Warn("Why is '" + player.Get<string>("Login") + "' disconnected!??!?!?");
 							continue;
 						}
 						var login = player.Get<string>("Login");
 						var ply = m_game.GetPlayer(login);
-						m_logger.Debug("Updating score for player '" + login + "'");
 						ply.m_score = player.Get<int>("Score");
 					}
 					m_plugins.OnEndRound();
@@ -258,6 +265,25 @@ namespace Nimania
 
 			m_remote.AddCallback("TrackMania.EndChallenge", (GbxValue[] cb) => {
 				m_plugins.OnEndChallenge();
+
+				if (m_game.m_queue.Count > 0) {
+					var uid = m_game.m_queue[0];
+					m_game.m_queue.RemoveAt(0);
+					m_remote.Execute("SetNextMapIdent", uid);
+
+					var map = m_database.FindByAttributes<Map>("UId", uid);
+					if (map != null) {
+						m_plugins.OnNextMap(map);
+					}
+				} else {
+					m_remote.Query("GetNextMapInfo", (GbxValue res) => {
+						var uid = res.Get<string>("UId");
+						var map = m_database.FindByAttributes<Map>("UId", uid);
+						if (map != null) {
+							m_plugins.OnNextMap(map);
+						}
+					});
+				}
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerConnect", (GbxValue[] cb) => {
@@ -349,7 +375,6 @@ namespace Nimania
 					player.m_bestCheckpoints.AddRange(player.m_checkpoints);
 					player.m_bestCheckpointsLap.Clear();
 					player.m_bestCheckpointsLap.AddRange(player.m_checkpoints.Skip(Math.Max(0, player.m_checkpoints.Count() - m_game.m_currentMap.m_nCheckpoints)));
-					//TODO: Distinct between all/lap checkpoints
 				}
 				player.m_lastTime = time;
 				m_plugins.OnPlayerFinish(player, time, player.m_checkpoints.ToArray());
@@ -393,13 +418,17 @@ namespace Nimania
 				map.FileName = val.Get<string>("FileName");
 				map.Save();
 			}
-			map.m_nCheckpoints = val.Get<int>("NbCheckpoints");
 
-			map.m_timeBronze = val.Get<int>("BronzeTime");
-			map.m_timeSilver = val.Get<int>("SilverTime");
+			// Sadly, there are times when we don't get as much info as we might want.
+			val.TryGet("NbCheckpoints", ref map.m_nCheckpoints);
+
+			val.TryGet("BronzeTime", ref map.m_timeBronze);
+			val.TryGet("SilverTime", ref map.m_timeSilver);
+			val.TryGet("AuthorTime", ref map.m_timeAuthor);
+			val.TryGet("LapRace", ref map.m_laps);
+
+			// But this one does make the cut. Thanks Nadeo.
 			map.m_timeGold = val.Get<int>("GoldTime");
-			map.m_timeAuthor = val.Get<int>("AuthorTime");
-			map.m_laps = val.Get<bool>("LapRace");
 			return map;
 		}
 	}

@@ -198,6 +198,17 @@ namespace Nimania
 			}
 		}
 
+		public void OnNextMap(Map map)
+		{
+			lock (m_plugins) {
+				foreach (var plugin in m_plugins) {
+					Task.Factory.StartNew(() => {
+						plugin.OnNextMap(map);
+					});
+				}
+			}
+		}
+
 		public void OnPlayerBegin(PlayerInfo player)
 		{
 			lock (m_plugins) {

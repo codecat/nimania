@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using NLog;
+using Nimania.Runtime.DbModels;
 
 namespace Nimania.Runtime
 {
@@ -34,7 +35,7 @@ namespace Nimania.Runtime
 		public virtual void SoftReload() { }
 
 		// Synced callbacks
-		public virtual void OnAction(PlayerInfo player, string action) { }
+		public virtual void OnAction(PlayerInfo player, string action, string[] args) { }
 
 		public virtual void OnBeginChallenge() { }
 		public virtual void OnEndChallenge() { }
@@ -43,6 +44,8 @@ namespace Nimania.Runtime
 		public virtual void OnPlayerDisconnect(PlayerInfo player) { }
 
 		public virtual void OnEndRound() { }
+
+		public virtual void OnNextMap(Map map) { }
 
 		// Trackmania synced callbacks
 		public virtual void OnPlayerBegin(PlayerInfo player) { } // called on retire and begin of 321go

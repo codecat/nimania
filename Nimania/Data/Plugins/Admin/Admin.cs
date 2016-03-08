@@ -38,7 +38,7 @@ namespace Nimania.Plugins
 			SendViewToLogin(login, "Admin/Bar.xml");
 		}
 
-		public override void OnAction(PlayerInfo player, string action)
+		public override void OnAction(PlayerInfo player, string action, string[] args)
 		{
 			if (!player.IsAdmin) {
 				m_logger.Warn("User {0} tried accessing admin controls, not allowed!", player.m_login);

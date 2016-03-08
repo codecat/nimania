@@ -11,6 +11,8 @@ namespace Nimania.Runtime
 	{
 		public Map m_currentMap;
 		public List<PlayerInfo> m_players = new List<PlayerInfo>();
+		public List<Map> m_maps = new List<Map>();
+		public List<string> m_queue = new List<string>();
 
 		public string m_serverIP;
 		public int m_serverPort;
@@ -64,6 +66,16 @@ namespace Nimania.Runtime
 				}
 			}
 			return null;
+		}
+
+		public bool IsQueued(Map map)
+		{
+			return m_queue.Contains(map.UId);
+		}
+
+		public void QueueMap(Map map)
+		{
+			m_queue.Add(map.UId);
 		}
 	}
 }

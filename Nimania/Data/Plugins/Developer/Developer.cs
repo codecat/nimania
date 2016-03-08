@@ -41,7 +41,7 @@ namespace Nimania.Plugins
 				"plugin_errors", pluginManager.m_errorCount.ToString());
 		}
 
-		public override void OnAction(PlayerInfo player, string action)
+		public override void OnAction(PlayerInfo player, string action, string[] args)
 		{
 			if (!player.IsDeveloper) {
 				m_logger.Warn("User " + player.m_login + " tried accessing developer controls, not allowed!");

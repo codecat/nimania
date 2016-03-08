@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
+using Nimania.Runtime.DbModels;
 using NLog;
 
 namespace Nimania.Plugins
@@ -58,29 +59,56 @@ namespace Nimania.Plugins
 					HandleAdminCommand(player, args[0], args.Skip(1).ToArray());
 					break;
 
-				case "/players":
-					string xmlItems = "";
-					lock (m_game.m_players) {
-						for (int i = 0; i < m_game.m_players.Count; i++) {
-							var ply = m_game.m_players[i];
+				case "/players": {
+						string xmlItems = "";
+						lock (m_game.m_players) {
+							for (int i = 0; i < m_game.m_players.Count; i++) {
+								var ply = m_game.m_players[i];
 
-							string login = "";
-							if (ply.IsDeveloper) {
-								login = "$a77";
-							} else if (ply.IsAdmin) {
-								login = "$7a7";
-							} else {
-								login = "$77a";
+								string login = "";
+								if (ply.IsDeveloper) {
+									login = "$a77";
+								} else if (ply.IsAdmin) {
+									login = "$7a7";
+								} else {
+									login = "$77a";
+								}
+								login += "(" + ply.m_login + ")";
+
+								xmlItems += GetView("Chat/PlayersItem.xml",
+									"y", (-3.5 * i).ToString(),
+									"name", Utils.XmlEntities(ply.m_nickname),
+									"login", Utils.XmlEntities(login));
 							}
-							login += "(" + ply.m_login + ")";
-
-							xmlItems += GetView("Chat/PlayersItem.xml",
-								"y", (-3.5 * i).ToString(),
-								"name", Utils.XmlEntities(ply.m_nickname),
-								"login", Utils.XmlEntities(login));
 						}
+						SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true, "items", xmlItems);
+					} break;
+
+				case "/list": {
+						string xmlItems = "";
+						lock (m_game.m_maps) {
+							for (int i = 0; i < m_game.m_maps.Count; i++) {
+								var map = m_game.m_maps[i];
+
+								xmlItems += GetView("Chat/MapsItem.xml",
+									"y", (-3.5 * i).ToString(),
+									"name", Utils.XmlEntities(map.Name),
+									"author", Utils.XmlEntities(map.Author),
+									"karma", map.Karma.ToString(),
+									"gold", Utils.TimeString(map.m_timeGold),
+									"uid", map.UId);
+							}
+						}
+						SendViewToLogin(player.m_login, "Chat/Maps.xml", "items", xmlItems);
+					} break;
+
+				case "/jukebox":
+					if (args.Length == 0) {
+						break;
 					}
-					SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true, "items", xmlItems);
+					if (args[0] == "display") {
+						SendChatTo(player.m_login, "$fffThere are currently $f00" + m_game.m_queue.Count + " $fffmaps in the jukebox.");
+					}
 					break;
 			}
 		}
@@ -134,15 +162,19 @@ namespace Nimania.Plugins
 							foundSystem = true;
 							break;
 					}
-					m_remote.Execute("SetRoundCustomPoints", pointSystem, true);
-					string points = "";
-					for (int i = 0; i < pointSystem.Length; i++) {
-						if (i > 0) {
-							points += ",";
+					if (foundSystem) {
+						m_remote.Execute("SetRoundCustomPoints", pointSystem, true);
+						string points = "";
+						for (int i = 0; i < pointSystem.Length; i++) {
+							if (i > 0) {
+								points += ",";
+							}
+							points += pointSystem[i];
 						}
-						points += pointSystem[i];
+						SendAdminSet(player, "round points", points == "" ? "normal" : points);
+					} else {
+						SendChatTo(player.m_id, "$fffUnknown round points system.");
 					}
-					SendAdminSet(player, "round points", points == "" ? "normal" : points);
 					break;
 			}
 		}
@@ -150,6 +182,37 @@ namespace Nimania.Plugins
 		public void SendAdminSet(PlayerInfo admin, string thing, string what)
 		{
 			SendChat(string.Format(m_config["Messages.Admin.Set"], admin.m_localPlayer.Group.Name, admin.m_nickname, thing, what));
+		}
+
+		public override void OnAction(PlayerInfo player, string action, string[] args)
+		{
+			switch (action) {
+				case "CloseMaps":
+					//TODO: Do this with a Maniascript instead
+					m_remote.Execute("SendDisplayManialinkPageToLogin", player.m_login, "<manialink version=\"2\" id=\"ChatMapsWidget\"></manialink>", 0, false);
+					break;
+
+				case "QueueMap":
+					if (args.Length == 0) {
+						return;
+					}
+					var map = m_database.FindByAttributes<Map>("UId", args[0]);
+					if (map == null) {
+						return;
+					}
+					if (m_game.IsQueued(map)) {
+						SendChatTo(player.m_id, "$fffMap is already in queue.");
+						return;
+					}
+					m_game.QueueMap(map);
+					SendChat(string.Format(m_config["Messages.Queue.Add"], player.m_nickname, map.Name));
+					break;
+			}
+		}
+
+		public override void OnNextMap(Map map)
+		{
+			SendChat(string.Format(m_config["Messages.Queue.Next"], map.Name));
 		}
 	}
 }

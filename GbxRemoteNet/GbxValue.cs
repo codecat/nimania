@@ -96,6 +96,17 @@ namespace GbxRemoteNet
 			return (T)table[key].m_obj;
 		}
 
+		public bool TryGet<T>(string key, ref T v)
+		{
+			System.Diagnostics.Debug.Assert(m_type == GbxValueType.Struct);
+			var table = (Dictionary<string, GbxValue>)m_obj;
+			if (!table.ContainsKey(key)) {
+				return false;
+			}
+			v = (T)table[key].m_obj;
+			return true;
+		}
+
 		public void DumpInfo(int startDepth = 0)
 		{
 			DumpInfoInternal(startDepth);

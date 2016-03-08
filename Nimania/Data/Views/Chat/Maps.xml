@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manialink version="2" id="ChatMapsWidget">
+	<frame posn="-75 45">
+		<quad posn="-1 0" sizen="152 4" style="Bgs1InRace" substyle="BgCard" valign="bottom" />
+		<label posn="0 0.5" text="Maps on server" style="TextCardSmallScores2" valign="bottom" />
+
+		<quad posn="150 -1 1" sizen="6 6" style="Icons64x64_1" substyle="Close" action="Chat.CloseMaps" halign="right" valign="bottom" />
+
+		<quad sizen="150 88" bgcolor="2227" />
+
+		<?=items?>
+	</frame>
+</manialink>
