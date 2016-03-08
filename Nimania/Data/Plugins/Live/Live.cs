@@ -66,9 +66,8 @@ namespace Nimania.Plugins
 					}
 					return 0;
 				});
-				int ct = Math.Min(players.Count, MAX_SHOW_PLAYERS);
 				int n = 0;
-				for (int i = 0; i < ct; i++) {
+				for (int i = 0; i < players.Count; i++) {
 					var player = players[i];
 
 					// Filter players without times in TA
@@ -93,7 +92,9 @@ namespace Nimania.Plugins
 						"time", Utils.TimeString(player.m_bestTime),
 						"score", player.m_score.ToString(),
 						"scoreleft", (m_scoreLimit - player.m_score).ToString());
-					n++;
+
+					if (++n >= MAX_SHOW_PLAYERS)
+						break;
 				}
 			}
 

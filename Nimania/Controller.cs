@@ -257,6 +257,10 @@ namespace Nimania
 						}
 						var login = player.Get<string>("Login");
 						var ply = m_game.GetPlayer(login);
+						if (ply == null) {
+							//TODO: wtf?
+							continue;
+						}
 						ply.m_score = player.Get<int>("Score");
 					}
 					m_plugins.OnEndRound();
