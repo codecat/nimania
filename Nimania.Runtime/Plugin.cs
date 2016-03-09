@@ -111,5 +111,31 @@ namespace Nimania.Runtime
 			}
 			return xml;
 		}
+
+		public Map LoadMapInfo(GbxValue val)
+		{
+			string uid = val.Get<string>("UId");
+			var map = m_database.FindByAttributes<Map>("UId", uid);
+			if (map == null) {
+				map = m_database.Create<Map>();
+				map.UId = uid;
+				map.Name = val.Get<string>("Name");
+				map.Author = val.Get<string>("Author");
+				map.FileName = val.Get<string>("FileName");
+				map.Save();
+			}
+
+			// Sadly, there are times when we don't get as much info as we might want.
+			val.TryGet("NbCheckpoints", ref map.m_nCheckpoints);
+
+			val.TryGet("BronzeTime", ref map.m_timeBronze);
+			val.TryGet("SilverTime", ref map.m_timeSilver);
+			val.TryGet("AuthorTime", ref map.m_timeAuthor);
+			val.TryGet("LapRace", ref map.m_laps);
+
+			// But this one does make the cut. Thanks Nadeo.
+			map.m_timeGold = val.Get<int>("GoldTime");
+			return map;
+		}
 	}
 }

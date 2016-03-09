@@ -26,7 +26,7 @@ namespace Nimania.Plugins
 				var player = m_game.GetPlayer(id);
 				if (command) {
 					m_logger.Info("Chat command: {0}: {1}", player.m_login, message);
-					string[] parse = message.Split(' ');
+					var parse = message.SplitCommandline();
 					HandleCommand(player, parse[0], parse.Skip(1).ToArray());
 				} else {
 					m_logger.Info("Chat: {0}: {1}", Utils.StripFormatCodes(player.m_nickname) + " (" + player.m_login + ")", Utils.StripFormatCodes(message));
@@ -82,7 +82,8 @@ namespace Nimania.Plugins
 							}
 						}
 						SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true, "items", xmlItems);
-					} break;
+					}
+					break;
 
 				case "/list": {
 						string xmlItems = "";
@@ -100,7 +101,8 @@ namespace Nimania.Plugins
 							}
 						}
 						SendViewToLogin(player.m_login, "Chat/Maps.xml", "items", xmlItems);
-					} break;
+					}
+					break;
 
 				case "/jukebox":
 					if (args.Length == 0) {
@@ -175,6 +177,24 @@ namespace Nimania.Plugins
 					} else {
 						SendChatTo(player.m_id, "$fffUnknown round points system.");
 					}
+					break;
+
+				case "addlocal":
+					if (args.Length != 1) {
+						SendChatTo(player.m_id, "$fffUse like this: $666/admin addlocal Downloaded/Something.Map.Gbx");
+						break;
+					}
+					m_remote.Query("AddMap", (GbxValue res) => {
+						if (res == null) {
+							SendChatTo(player.m_id, "$f00Failed to add that map.");
+						} else {
+							m_remote.Query("GetMapInfo", (GbxValue resMap) => {
+								var map = LoadMapInfo(resMap);
+								SendChat(string.Format(m_config["Messages.Admin.AddMap"], player.m_localPlayer.Group.Name, player.m_nickname, map.Name));
+								m_game.QueueMap(map);
+							}, args[0]);
+						}
+					}, args[0]);
 					break;
 			}
 		}
