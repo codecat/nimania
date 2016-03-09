@@ -69,7 +69,7 @@ namespace GbxRemoteNet
 		private void ReadLoop()
 		{
 			while (m_keepReading) {
-				try {
+				//try {
 					// read a message from server
 					uint size = m_reader.ReadUInt32();
 					uint handle = m_reader.ReadUInt32();
@@ -154,7 +154,7 @@ namespace GbxRemoteNet
 						}
 						continue;
 					}
-				} catch (Exception ex) {
+				/*} catch (Exception ex) {
 					// if the server disconnected us
 					if (ex is IOException || ex is ObjectDisposedException) {
 						if (m_keepReading) {
@@ -167,7 +167,7 @@ namespace GbxRemoteNet
 
 					// it's some other exception, throw it so we can fix it
 					throw;
-				}
+				}*/
 			}
 		}
 

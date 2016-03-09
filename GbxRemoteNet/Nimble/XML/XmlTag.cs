@@ -53,12 +53,12 @@ namespace Nimble.XML
       while (true) {
         if (fs.PeekChar() == '?') {
           // xml decleration is a small exception
-          Debug.Assert(fs.Expect("?xml "));
+          fs.Expect("?xml ");
           bReadAttributes = true;
           break;
         } else if (fs.PeekChar() == '!') {
           // xml comment
-          Debug.Assert(fs.Expect("!--"));
+          fs.Expect("!--");
           IsComment = true;
           var strValue = new StringBuilder();
           string strEnding = "-->";
@@ -134,7 +134,7 @@ namespace Nimble.XML
             // if this is the end of the tag
             if (fs.PeekChar() == '/') {
               // break out
-              Debug.Assert(fs.Expect("/" + Name + ">"));
+              fs.Expect("/" + Name + ">");
               break;
             } else {
               // new tag nested in this tag
