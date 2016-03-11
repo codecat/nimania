@@ -303,6 +303,7 @@ namespace Nimania
 						player.m_id = res.Get<int>("PlayerId");
 						player.m_nickname = res.Get<string>("NickName");
 						player.m_spectating = res.Get<bool>("IsSpectator");
+						player.m_connected = true;
 					}
 					m_plugins.OnPlayerConnect(player);
 				}, login);

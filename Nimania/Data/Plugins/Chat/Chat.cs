@@ -7,6 +7,7 @@ using GbxRemoteNet;
 using Nimania.Runtime;
 using Nimania.Runtime.DbModels;
 using NLog;
+using System.IO;
 
 namespace Nimania.Plugins
 {
@@ -122,6 +123,15 @@ namespace Nimania.Plugins
 				return;
 			}
 			switch (subCommand) {
+				case "setservername":
+					if (args.Length != 1) {
+						SendChatTo(player.m_id, "$fffUse like this: $666/admin setservername \"$<$$f00Awesome Server!$>$\"");
+						break;
+					}
+					m_remote.Execute("SetServerName", args[0]);
+					SendAdminSet(player, "server name", args[0]);
+					break;
+
 				case "setgamemode":
 					if (args.Length != 1) {
 						SendChatTo(player.m_id, "$fffUse like this: $666/admin setgamemode <Script|Rounds|TA|Team|Laps|Cup|Stunts>");
@@ -181,7 +191,7 @@ namespace Nimania.Plugins
 
 				case "addlocal":
 					if (args.Length != 1) {
-						SendChatTo(player.m_id, "$fffUse like this: $666/admin addlocal Downloaded/Something.Map.Gbx");
+						SendChatTo(player.m_id, "$fffUse like this: $666/admin addlocal \"Downloaded/Something.Map.Gbx\"");
 						break;
 					}
 					m_remote.Query("AddMap", (GbxValue res) => {
@@ -195,6 +205,51 @@ namespace Nimania.Plugins
 							}, args[0]);
 						}
 					}, args[0]);
+					break;
+
+				case "removethis":
+					m_remote.Query("RemoveMap", (GbxValue res) => {
+						if (res == null) {
+							SendChatTo(player.m_id, "$f00Failed to remove this map.");
+						} else {
+							SendChat(string.Format(m_config["Messages.Admin.RemoveMap"], player.m_localPlayer.Group.Name, player.m_nickname));
+						}
+					}, m_game.m_currentMap.FileName);
+					break;
+
+				case "erasethis":
+					m_remote.Query("RemoveMap", (GbxValue res) => {
+						if (res == null) {
+							SendChatTo(player.m_id, "$f00Failed to erase this map.");
+						} else {
+							SendChat(string.Format(m_config["Messages.Admin.EraseMap"], player.m_localPlayer.Group.Name, player.m_nickname));
+							m_remote.Query("GetMapsDirectory", (GbxValue resDir) => {
+								string path = resDir.Get<string>();
+								try {
+									File.Delete(path + m_game.m_currentMap.FileName);
+								} catch { /* Ignore this because a failure could happen.. */ }
+							});
+						}
+					}, m_game.m_currentMap.FileName);
+					break;
+
+				case "setmaxplayers":
+					if (args.Length != 1) {
+						SendChatTo(player.m_id, "$fffUse like this: $666/admin setmaxplayers 64");
+						break;
+					}
+					int newMaxPlayers = 0;
+					if (!int.TryParse(args[0], out newMaxPlayers)) {
+						SendChatTo(player.m_id, "$f00That's not a number.");
+						break;
+					}
+					m_remote.Query("SetMaxPlayers", (GbxValue res) => {
+						if (res == null) {
+							SendChatTo(player.m_id, "$f00Failed to set the max players.");
+						} else {
+							SendAdminSet(player, "max players", newMaxPlayers.ToString());
+						}
+					}, newMaxPlayers);
 					break;
 			}
 		}
