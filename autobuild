@@ -1,0 +1,4 @@
+#!/bin/bash
+
+Tools/nuget.exe restore
+xbuild /p:Configuration=Release
