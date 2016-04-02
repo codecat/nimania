@@ -70,7 +70,7 @@ namespace Nimania.Runtime
 
 		public static string StripLinkCodes(string s)
 		{
-			return Regex.Replace(s, "\\$([lh](\\[[^\\]]+\\])?)", "");
+			return Regex.Replace(s, "\\$([lhp](\\[[^\\]]+\\])?)", "");
 		}
 
 		public static void Assert(bool b, string desc = "")
