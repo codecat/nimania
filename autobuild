@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ -f autobuild.log ]; then
+	rm autobuild.log
+fi
+
+Tools/nuget.exe restore &>> autobuild.log
+xbuild /p:Configuration=Release &>> autobuild.log
+
+shopt -s globstar
+
+cd Nimania/bin/Release
+fnm=$(mktemp -u)
+zip $fnm **/* &>> autobuild.log
+echo $fnm
