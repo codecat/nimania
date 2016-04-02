@@ -296,12 +296,34 @@ namespace Nimania.Plugins
 			bool sentOk = false;
 			for (int i = 0; i < 3; i++) {
 				try {
-					var vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_checkpoints);
+					var vChecks = "";
+					if (m_game.m_serverGameMode == 4) {
+						vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_checkpointsAll);
+					} else {
+						vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_bestCheckpoints);
+					}
+					/*
 					var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
 						VReplay = vReplay,
 						VReplayChecks = vChecks,
 						Top1GReplay = top1Replay
 					});
+					*/
+					m_api.MultiCall(new[] {
+						new MultiCallEntry() {
+							methodName = "dedimania.SetChallengeTimes",
+							parameters = new object[] { m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
+								VReplay = vReplay,
+								VReplayChecks = vChecks,
+								Top1GReplay = top1Replay
+							} }
+						},
+						new MultiCallEntry() {
+							methodName = "dedimania.WarningsAndTTR2",
+							parameters = new object[0]
+						}
+					});
+					m_logger.Info("Sent multicall to dedis");
 					sentOk = true;
 					break;
 				} catch (Exception ex) {

@@ -1,4 +1,4 @@
-<frame posn="0 <?=y?>">
+<frame posn="0 <?=y?>" id="ply_<?=login?>">
 	<quad sizen="45 3" bgcolor="2227" />
 	<label posn="0.2 -0.2" sizen="3.5" text="$s<?=place?>." style="TextPlayerCardName" />
 	<label posn="4.5 -0.2 3" sizen="28" text="$s<?=name?>" style="TextPlayerCardName" />

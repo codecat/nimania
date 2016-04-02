@@ -41,6 +41,8 @@ namespace Nimania.Plugins
 		{
 			bool updated = false;
 
+			n %= m_game.m_currentMap.m_nCheckpoints;
+
 			if (n + 1 > m_cps.Count) {
 				if (m_cps.Count == n && n != m_cpCount - 1) {
 					m_cps.Add(new BestCp() {

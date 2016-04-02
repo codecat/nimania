@@ -131,6 +131,7 @@ namespace Nimania.Plugins
 		{
 			// sadly, we are forced to send the entire thing every time it updates. :(
 			string xmlItems = "";
+			string xmlArrows = "";
 			lock (m_localTimes) {
 				int ct = Math.Min(m_localTimes.Count, 25);
 				for (int i = 0; i < ct; i++) {
@@ -139,14 +140,30 @@ namespace Nimania.Plugins
 						"y", (-3.5 * i).ToString(),
 						"place", (i + 1).ToString(),
 						"name", Utils.XmlEntities(time.Player.NoLinkNickname),
+						"login", Utils.XmlEntities(time.Player.Login),
 						"time", Utils.TimeString(time.Time));
+
+					var player = m_game.GetPlayer(time.Player.Login);
+					if (player != null && player.m_connected) {
+						xmlArrows += GetView("ListArrows/ArrowPlayer.xml",
+							"y", (-4.0 - i * 3.5).ToString(),
+							"login", Utils.XmlEntities(player.m_login));
+					}
 				}
 			}
 
+			var arrowLocal = GetView("ListArrows/ArrowLocal.xml");
+
 			if (login == "") {
-				SendView("Locals/Widget.xml", "items", xmlItems);
+				SendView("Locals/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal,
+					"arrows", xmlArrows);
 			} else {
-				SendViewToLogin(login, "Locals/Widget.xml", "items", xmlItems);
+				SendViewToLogin(login, "Locals/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal,
+					"arrows", xmlArrows);
 			}
 		}
 

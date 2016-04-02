@@ -23,11 +23,13 @@ namespace Nimania.Runtime
 		public string NoLinkNickname { get { return Utils.StripLinkCodes(m_nickname); } }
 
 		public List<int> m_checkpoints = new List<int>();
+		public List<int> m_checkpointsAll = new List<int>();
 		public List<int> m_bestCheckpoints = new List<int>();
 		public List<int> m_bestCheckpointsLap = new List<int>();
 		public int m_prevBestTime = -1;
 		public int m_bestTime = -1;
 		public int m_lastTime = -1;
+		public int m_lastTimeLap = -1;
 
 		public int m_score = 0;
 

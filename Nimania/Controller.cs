@@ -210,8 +210,9 @@ namespace Nimania
 							var cps = player.Get<ArrayList>("BestCheckpoints");
 							foreach (GbxValue cp in cps) {
 								int cpt = cp.Get<int>();
-								ply.m_checkpoints.Add(cpt);
-								ply.m_bestCheckpoints.Add(cpt);
+								ply.m_checkpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
+								ply.m_checkpointsAll.Add(cpt);
+								ply.m_bestCheckpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
 							}
 						}
 					}
@@ -246,6 +247,14 @@ namespace Nimania
 					m_game.m_serverGameMode = res.Get<int>();
 					m_plugins.OnBeginChallenge();
 				});
+				lock (m_game.m_players) {
+					foreach(var player in m_game.m_players) {
+						player.m_checkpoints.Clear();
+						player.m_checkpointsAll.Clear();
+						player.m_bestCheckpoints.Clear();
+						player.m_bestCheckpointsLap.Clear();
+					}
+				}
 			});
 
 			m_remote.AddCallback("TrackMania.EndRound", (GbxValue[] cb) => {
@@ -350,10 +359,34 @@ namespace Nimania
 					return;
 				}
 
-				if (n + 1 > player.m_checkpoints.Count || m_game.m_currentMap.m_laps) {
-					player.m_checkpoints.Add(time);
+				int cpTime = time;
+				if (m_game.m_serverGameMode == 4 && n + 1 > m_game.m_currentMap.m_nCheckpoints) {
+					cpTime -= player.m_lastTimeLap;
 				}
-				m_plugins.OnPlayerCheckpoint(player, n, time);
+
+				if (n + 1 > player.m_checkpoints.Count || m_game.m_currentMap.m_laps) {
+					player.m_checkpoints.Add(cpTime);
+					player.m_checkpointsAll.Add(time);
+				}
+				m_plugins.OnPlayerCheckpoint(player, n, cpTime);
+
+				if (((n + 1) % m_game.m_currentMap.m_nCheckpoints) == 0) {
+					int lapTime = time;
+					if (m_game.m_serverGameMode == 4 && n + 1 > m_game.m_currentMap.m_nCheckpoints) {
+						lapTime -= player.m_lastTimeLap;
+					}
+					if (lapTime < player.m_bestTime || player.m_bestTime == -1) {
+						player.m_prevBestTime = player.m_bestTime;
+						player.m_bestTime = lapTime;
+						player.m_bestCheckpoints.Clear();
+						player.m_bestCheckpoints.AddRange(player.m_checkpoints);
+						player.m_bestCheckpointsLap.Clear();
+						player.m_bestCheckpointsLap.AddRange(player.m_checkpoints.Skip(Math.Max(0, player.m_checkpoints.Count() - m_game.m_currentMap.m_nCheckpoints)));
+					}
+					player.m_lastTime = lapTime;
+					player.m_lastTimeLap = time;
+					m_plugins.OnPlayerFinish(player, lapTime, player.m_checkpoints.ToArray());
+				}
 			});
 
 			m_remote.AddCallback("TrackMania.PlayerFinish", (GbxValue[] cb) => {
@@ -369,20 +402,10 @@ namespace Nimania
 
 				if (time == 0) {
 					player.m_checkpoints.Clear();
+					player.m_checkpointsAll.Clear();
 					m_plugins.OnPlayerBegin(player);
 					return;
 				}
-
-				if (time < player.m_bestTime || player.m_bestTime == -1) {
-					player.m_prevBestTime = player.m_bestTime;
-					player.m_bestTime = time;
-					player.m_bestCheckpoints.Clear();
-					player.m_bestCheckpoints.AddRange(player.m_checkpoints);
-					player.m_bestCheckpointsLap.Clear();
-					player.m_bestCheckpointsLap.AddRange(player.m_checkpoints.Skip(Math.Max(0, player.m_checkpoints.Count() - m_game.m_currentMap.m_nCheckpoints)));
-				}
-				player.m_lastTime = time;
-				m_plugins.OnPlayerFinish(player, time, player.m_checkpoints.ToArray());
 			});
 		}
 

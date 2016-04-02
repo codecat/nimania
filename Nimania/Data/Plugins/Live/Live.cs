@@ -70,8 +70,8 @@ namespace Nimania.Plugins
 				for (int i = 0; i < players.Count; i++) {
 					var player = players[i];
 
-					// Filter players without times in TA
-					if (m_game.m_serverGameMode == 2 && player.m_bestTime == -1) {
+					// Filter players without times in TA and laps
+					if ((m_game.m_serverGameMode == 2 || m_game.m_serverGameMode == 4) && player.m_bestTime == -1) {
 						continue;
 					}
 
@@ -89,19 +89,27 @@ namespace Nimania.Plugins
 						"y", (-3.5 * n).ToString(),
 						"place", (n + 1).ToString(),
 						"name", Utils.XmlEntities(player.NoLinkNickname),
+						"login", Utils.XmlEntities(player.m_login),
 						"time", Utils.TimeString(player.m_bestTime),
 						"score", player.m_score.ToString(),
 						"scoreleft", (m_scoreLimit - player.m_score).ToString());
 
-					if (++n >= MAX_SHOW_PLAYERS)
+					if (++n >= MAX_SHOW_PLAYERS) {
 						break;
+					}
 				}
 			}
 
+			var arrowLocal = GetView("ListArrows/ArrowLocal.xml");
+
 			if (login == "") {
-				SendView("Live/Widget.xml", "items", xmlItems);
+				SendView("Live/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal);
 			} else {
-				SendViewToLogin(login, "Live/Widget.xml", "items", xmlItems);
+				SendViewToLogin(login, "Live/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal);
 			}
 		}
 

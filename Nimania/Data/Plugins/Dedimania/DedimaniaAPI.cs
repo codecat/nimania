@@ -126,6 +126,13 @@ namespace Nimania.Plugins
 		public byte[] Top1GReplay;
 	}
 
+	public struct MultiCallEntry
+	{
+		public string methodName;
+		[XmlRpcMember("params")]
+		public object[] parameters;
+	}
+
 	[XmlRpcUrl("http://dedimania.net:8082/Dedimania")]
 	public interface IDedimaniaAPI : IXmlRpcProxy
 	{
@@ -143,5 +150,8 @@ namespace Nimania.Plugins
 
 		[XmlRpcMethod("dedimania.UpdateServerPlayers")]
 		bool UpdateServerPlayers(string session, DediSrvInfo srvInfo, DediVotesInfo votesInfo, DediPlayerUpdate[] players);
+
+		[XmlRpcMethod("system.multicall")]
+		void MultiCall(MultiCallEntry[] entries);
 	}
 }
