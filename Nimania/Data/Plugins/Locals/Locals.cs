@@ -15,6 +15,8 @@ namespace Nimania.Plugins
 
 		public override void Initialize()
 		{
+			m_game.m_userData.AddCategory("Locals");
+
 			ReloadMapInfo();
 		}
 
@@ -57,6 +59,7 @@ namespace Nimania.Plugins
 						} else if (time < localTime.Time) {
 							int diff = localTime.Time - time;
 							localTime.Time = time;
+							localTime.Checkpoints = string.Join(",", checkpoints);
 							localTime.Save();
 							SortTimes(); //TODO: Get rid of this and move the element around ourselves
 							int n = m_localTimes.IndexOf(localTime);
@@ -65,6 +68,14 @@ namespace Nimania.Plugins
 							} else {
 								SendChat(string.Format(m_config["Messages.Locals.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
 							}
+
+							player.m_userData.Set("Locals.PB", time);
+							player.m_userData.Set("Locals.PB-CP", checkpoints);
+							if (n == 0) {
+								m_game.m_userData.Set("Locals.1st", time);
+								m_game.m_userData.Set("Locals.1st-CP", checkpoints);
+							}
+
 							updated = true;
 						}
 						break;
@@ -91,13 +102,20 @@ namespace Nimania.Plugins
 						newTime.Map = m_game.m_currentMap;
 						newTime.Player = player.m_localPlayer;
 						newTime.Time = time;
-						newTime.Checkpoints = "";
+						newTime.Checkpoints = string.Join(",", checkpoints);
 						newTime.Save();
 						m_localTimes.Insert(insertBefore, newTime);
 						SendChat(string.Format(m_config["Messages.Locals.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
 
 						if (m_localTimes.Count > maxCount) {
 							m_localTimes.RemoveRange(maxCount, m_localTimes.Count - maxCount);
+						}
+
+						player.m_userData.Set("Locals.PB", time);
+						player.m_userData.Set("Locals.PB-CP", checkpoints);
+						if (insertBefore == 0) {
+							m_game.m_userData.Set("Locals.1st", time);
+							m_game.m_userData.Set("Locals.1st-CP", checkpoints);
 						}
 
 						updated = true;
@@ -121,7 +139,19 @@ namespace Nimania.Plugins
 					m_sort = true,
 					m_sortKey = "Time"
 				}));
+				foreach (var time in m_localTimes) {
+					var player = m_game.GetPlayer(time.Player.Login);
+					if (player != null) {
+						player.m_userData.Set("Locals.PB", time.Time);
+						player.m_userData.Set("Locals.PB-CP", Utils.ChecksToInt(time.Checkpoints));
+					}
+				}
 				SendChat("$f00" + m_localTimes.Count + "$fff local times on this map");
+			}
+
+			if (m_localTimes.Count > 0) {
+				m_game.m_userData.Set("Locals.1st", m_localTimes[0].Time);
+				m_game.m_userData.Set("Locals.1st-CP", Utils.ChecksToInt(m_localTimes[0].Checkpoints));
 			}
 
 			SendWidget();

@@ -83,15 +83,16 @@ namespace Nimania.Plugins
 			} else {
 				SendViewToLogin(login, "Checkpoints/Widget.xml", "cps", xmlCps);
 			}
-
-			SendView("Checkpoints/BestCompare.xml",
-				"LOCAL", true,
-				"DEDI", false);
 		}
 
 		public override void SoftReload()
 		{
-			SendWidget();
+			//SendWidget();
+			lock (m_game.m_players) {
+				foreach (var player in m_game.m_players) {
+					SendWidget(player.m_login);
+				}
+			}
 		}
 	}
 }

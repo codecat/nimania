@@ -6,12 +6,12 @@
 
 		<frame posn="-30 0">
 			<label text="$000Local PB" halign="center" textsize="1" />
-			<label text="$s$22f-0.152" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
+			<label text="$s<?=localPB?>" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
 		</frame>
 
 		<frame posn="-10 0">
 			<label text="$000Local 1st" halign="center" textsize="1" />
-			<label text="$s$22f-0.152" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
+			<label text="$s<?=local1st?>" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
 		</frame>
 %endif
 
@@ -20,12 +20,12 @@
 
 		<frame posn="10 0">
 			<label text="$000Dedi PB" halign="center" textsize="1" />
-			<label text="$s$22f-0.152" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
+			<label text="$s<?=dediPB?>" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
 		</frame>
 
 		<frame posn="30 0">
 			<label text="$000Dedi 1st" halign="center" textsize="1" />
-			<label text="$s$22f-0.152" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
+			<label text="$s<?=dedi1st?>" posn="0 -3.5" halign="center" style="TextPlayerCardName" textsize="2" />
 		</frame>
 %endif
 	</frame>

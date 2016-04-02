@@ -9,6 +9,8 @@ namespace Nimania.Runtime
 {
 	public class GameInfo
 	{
+		public UserData m_userData = new UserData();
+
 		public Map m_currentMap;
 		public List<PlayerInfo> m_players = new List<PlayerInfo>();
 		public List<Map> m_maps = new List<Map>();

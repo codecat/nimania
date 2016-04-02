@@ -18,6 +18,7 @@ namespace Nimania.Plugins
 		public string Login;
 		public string NickName;
 		public int Time;
+		public int[] Checkpoints;
 
 		public bool Updated = false;
 	}
@@ -37,6 +38,8 @@ namespace Nimania.Plugins
 		{
 			m_api = XmlRpcProxyGen.Create<IDedimaniaAPI>();
 			m_api.NonStandard = XmlRpcNonStandard.AllowStringFaultCode;
+
+			m_game.m_userData.AddCategory("Dedimania");
 
 			StartSession();
 		}
@@ -140,6 +143,16 @@ namespace Nimania.Plugins
 			SendWidget();
 		}
 
+		int[] ChecksToInts(string checks)
+		{
+			var parse = checks.Split(',');
+			var ret = new int[parse.Length];
+			for (int i = 0; i < ret.Length; i++) {
+				ret[i] = int.Parse(parse[i]);
+			}
+			return ret;
+		}
+
 		public override void OnPlayerFinish(PlayerInfo player, int time, int[] checkpoints)
 		{
 			bool updated = false;
@@ -158,6 +171,7 @@ namespace Nimania.Plugins
 						} else if (time < dediTime.Time) {
 							int diff = dediTime.Time - time;
 							dediTime.Time = time;
+							dediTime.Checkpoints = player.m_bestCheckpointsLap.ToArray();
 							SortTimes(); //TODO: Get rid of this and move the element around ourselves
 							int n = m_dediTimes.IndexOf(dediTime);
 							if (n != i) {
@@ -165,6 +179,14 @@ namespace Nimania.Plugins
 							} else {
 								SendChat(string.Format(m_config["Messages.Dedimania.TimeImproved"], player.m_nickname, n + 1, Utils.TimeString(time), Utils.TimeString(diff)));
 							}
+
+							player.m_userData.Set("Dedimania.PB", time);
+							player.m_userData.Set("Dedimania.PB-CP", dediTime.Checkpoints);
+							if (n == 0) {
+								m_game.m_userData.Set("Dedimania.1st", time);
+								m_game.m_userData.Set("Dedimania.1st-CP", dediTime.Checkpoints);
+							}
+
 							updated = true;
 						}
 						break;
@@ -189,10 +211,18 @@ namespace Nimania.Plugins
 						var newTime = new DediTime() {
 							Login = player.m_login,
 							NickName = player.m_nickname,
-							Time = time
+							Time = time,
+							Checkpoints = player.m_bestCheckpointsLap.ToArray()
 						};
 						m_dediTimes.Insert(insertBefore, newTime);
 						SendChat(string.Format(m_config["Messages.Dedimania.TimeGained"], player.m_nickname, insertBefore + 1, Utils.TimeString(time)));
+
+						player.m_userData.Set("Dedimania.PB", time);
+						player.m_userData.Set("Dedimania.PB-CP", newTime.Checkpoints);
+						if (insertBefore == 0) {
+							m_game.m_userData.Set("Dedimania.1st", time);
+							m_game.m_userData.Set("Dedimania.1st-CP", newTime.Checkpoints);
+						}
 
 						updated = true;
 					}
@@ -247,11 +277,10 @@ namespace Nimania.Plugins
 					if (player.m_bestTime == -1) {
 						continue;
 					}
-					string checks = string.Join(",", player.m_bestCheckpointsLap);
 					var time = new DediPlayerTime() {
 						Login = player.m_login,
 						Best = player.m_bestTime,
-						Checks = checks
+						Checks = string.Join(",", player.m_bestCheckpointsLap)
 					};
 					m_logger.Debug("Adding time: " + time.Login + ", " + time.Best + " (" + time.Checks + ")");
 					times.Add(time);
@@ -279,6 +308,11 @@ namespace Nimania.Plugins
 
 			var resVReplay = m_remote.QueryWait("GetValidationReplay", bestTime.Value.Login);
 
+			if (resVReplay == null) {
+				m_logger.Warn("No validation replay, not sending anything to Dedimania");
+				return;
+			}
+
 			var top1Replay = new byte[0];
 			if (bestTime.Value.Best < m_currentTop1 || m_currentTop1 == -1) {
 				string filename = "NimaniaReplays/" + dmi.UId + "_" + bestTime.Value.Login + "_" + bestTime.Value.Best;
@@ -294,46 +328,34 @@ namespace Nimania.Plugins
 			var vReplay = resVReplay.Get<byte[]>();
 
 			bool sentOk = false;
-			for (int i = 0; i < 3; i++) {
-				try {
-					var vChecks = "";
-					if (m_game.m_serverGameMode == 4) {
-						vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_checkpointsAll);
-					} else {
-						vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_bestCheckpoints);
-					}
-					/*
-					var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
+			var vChecks = "";
+			if (m_game.m_serverGameMode == 4) {
+				vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_checkpointsAll);
+			} else {
+				vChecks = string.Join(",", m_game.GetPlayer(bestTime.Value.Login).m_bestCheckpoints);
+			}
+			/*
+			var resDediSave = m_api.SetChallengeTimes(m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
+				VReplay = vReplay,
+				VReplayChecks = vChecks,
+				Top1GReplay = top1Replay
+			});
+			*/
+			m_api.MultiCall(new[] {
+				new MultiCallEntry() {
+					methodName = "dedimania.SetChallengeTimes",
+					parameters = new object[] { m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
 						VReplay = vReplay,
 						VReplayChecks = vChecks,
 						Top1GReplay = top1Replay
-					});
-					*/
-					m_api.MultiCall(new[] {
-						new MultiCallEntry() {
-							methodName = "dedimania.SetChallengeTimes",
-							parameters = new object[] { m_apiSession, dmi, GetGameModeID(), times.ToArray(), new DediReplay() {
-								VReplay = vReplay,
-								VReplayChecks = vChecks,
-								Top1GReplay = top1Replay
-							} }
-						},
-						new MultiCallEntry() {
-							methodName = "dedimania.WarningsAndTTR2",
-							parameters = new object[0]
-						}
-					});
-					m_logger.Info("Sent multicall to dedis");
-					sentOk = true;
-					break;
-				} catch (Exception ex) {
-					m_logger.Error(ex.Message);
-					continue;
+					} }
+				},
+				new MultiCallEntry() {
+					methodName = "dedimania.WarningsAndTTR2",
+					parameters = new object[0]
 				}
-			}
-			if (!sentOk) {
-				SendChat("$f00Failed $fffsending Dedmania records after 3 attempts!");
-			}
+			});
+			m_logger.Warn("Dedis sent; we don't check for warnings yet though. TODO: MAKE SURE IT DOES!");
 			return;
 		}
 
@@ -376,11 +398,23 @@ namespace Nimania.Plugins
 			SendChat("$f00" + dediRes.Value.Records.Length + "$fff dedimania times on this map");
 
 			foreach (var dedi in dediRes.Value.Records) {
+				var cps = ChecksToInts(dedi.Checks);
 				m_dediTimes.Add(new DediTime() {
 					Login = dedi.Login,
 					NickName = dedi.NickName,
-					Time = dedi.Best
+					Time = dedi.Best,
+					Checkpoints = cps
 				});
+				var player = m_game.GetPlayer(dedi.Login);
+				if (player != null) {
+					player.m_userData.Set("Dedimania.PB", dedi.Best);
+					player.m_userData.Set("Dedimania.PB-CP", cps);
+				}
+			}
+
+			if (m_dediTimes.Count > 0) {
+				m_game.m_userData.Set("Dedimania.1st", m_dediTimes[0].Time);
+				m_game.m_userData.Set("Dedimania.1st-CP", m_dediTimes[0].Checkpoints);
 			}
 
 			if (dediRes.Value.Records.Length > 0) {

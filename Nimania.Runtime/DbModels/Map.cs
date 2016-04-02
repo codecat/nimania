@@ -18,6 +18,8 @@ namespace Nimania.Runtime.DbModels
 		public int Karma;
 		public int KarmaVotes;
 
+		public UserData m_userData = new UserData();
+
 		public int m_nCheckpoints;
 
 		public int m_timeBronze;

@@ -9,6 +9,8 @@ namespace Nimania.Runtime
 {
 	public class PlayerInfo
 	{
+		public UserData m_userData = new UserData();
+
 		public int m_id;
 		public bool m_connected = true;
 

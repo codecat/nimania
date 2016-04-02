@@ -15,11 +15,15 @@ namespace Nimania.Runtime
 
 		public static string TimeString(int tm)
 		{
+			bool neg = tm < 0;
+			if (neg) {
+				tm = -tm;
+			}
 			int ms = tm % 1000;
 			int s = (tm / 1000) % 60;
 			int m = (tm / 1000 / 60) % 60;
 			int h = (tm / 1000 / 60 / 60);
-			string ret = "";
+			string ret = neg ? "-" : "";
 			if (h > 0) { ret += h + ":"; }
 			if (h > 0 || m > 0) { ret += m.ToString(h > 0 ? "00" : "0") + ":"; }
 			ret += s.ToString(m > 0 ? "00" : "0") + "." + ms.ToString("000");
@@ -65,7 +69,7 @@ namespace Nimania.Runtime
 
 		public static string StripFormatCodes(string s)
 		{
-			return Regex.Replace(s, "\\$([0-9a-f]{3}|[ionwsz<>]|[lh](\\[[^\\]]+\\])?)", "");
+			return Regex.Replace(s, "\\$([0-9a-f]{3}|[ionwsz<>]|[lhp](\\[[^\\]]+\\])?)", "");
 		}
 
 		public static string StripLinkCodes(string s)
@@ -80,6 +84,19 @@ namespace Nimania.Runtime
 			}
 			m_logger.Error("Failed assertion: {0}", desc);
 			Debug.Assert(false);
+		}
+
+		public static int[] ChecksToInt(string checks)
+		{
+			if (checks == "") {
+				return new int[0];
+			}
+			var parse = checks.Split(',');
+			var ret = new int[parse.Length];
+			for (int i = 0; i < ret.Length; i++) {
+				ret[i] = int.Parse(parse[i]);
+			}
+			return ret;
 		}
 	}
 }

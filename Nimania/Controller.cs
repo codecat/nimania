@@ -385,7 +385,7 @@ namespace Nimania
 					}
 					player.m_lastTime = lapTime;
 					player.m_lastTimeLap = time;
-					m_plugins.OnPlayerFinish(player, lapTime, player.m_checkpoints.ToArray());
+					m_plugins.OnPlayerFinish(player, lapTime, player.m_bestCheckpointsLap.ToArray());
 				}
 			});
 
