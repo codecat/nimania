@@ -137,8 +137,8 @@ namespace Nimania.Plugins
 				for (int i = 0; i < ct; i++) {
 					var time = m_localTimes[i];
 					xmlItems += GetView("Locals/Item.xml",
-						"y", (-3.5 * i).ToString(),
-						"place", (i + 1).ToString(),
+						"y", (-3.5 * i),
+						"place", (i + 1),
 						"name", Utils.XmlEntities(time.Player.NoLinkNickname),
 						"login", Utils.XmlEntities(time.Player.Login),
 						"time", Utils.TimeString(time.Time));
@@ -146,7 +146,7 @@ namespace Nimania.Plugins
 					var player = m_game.GetPlayer(time.Player.Login);
 					if (player != null && player.m_connected) {
 						xmlArrows += GetView("ListArrows/ArrowPlayer.xml",
-							"y", (-4.0 - i * 3.5).ToString(),
+							"y", (-4.0 - i * 3.5),
 							"login", Utils.XmlEntities(player.m_login));
 					}
 				}

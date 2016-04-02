@@ -401,8 +401,8 @@ namespace Nimania.Plugins
 				for (int i = 0; i < ct; i++) {
 					var time = m_dediTimes[i];
 					xmlItems += GetView("Dedimania/Item.xml",
-						"y", (-3.5 * i).ToString(),
-						"place", (i + 1).ToString(),
+						"y", (-3.5 * i),
+						"place", (i + 1),
 						"name", Utils.XmlEntities(Utils.StripLinkCodes(time.NickName)),
 						"time", Utils.TimeString(time.Time));
 				}

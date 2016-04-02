@@ -86,13 +86,13 @@ namespace Nimania.Plugins
 					}
 
 					xmlItems += GetView(viewName,
-						"y", (-3.5 * n).ToString(),
-						"place", (n + 1).ToString(),
+						"y", (-3.5 * n),
+						"place", (n + 1),
 						"name", Utils.XmlEntities(player.NoLinkNickname),
 						"login", Utils.XmlEntities(player.m_login),
 						"time", Utils.TimeString(player.m_bestTime),
-						"score", player.m_score.ToString(),
-						"scoreleft", (m_scoreLimit - player.m_score).ToString());
+						"score", player.m_score,
+						"scoreleft", (m_scoreLimit - player.m_score));
 
 					if (++n >= MAX_SHOW_PLAYERS) {
 						break;

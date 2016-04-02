@@ -70,12 +70,10 @@ namespace Nimania.Plugins
 			string xmlCps = "";
 			for (int i = 0; i < m_cps.Count; i++) {
 				var cp = m_cps[i];
-				int x = (i % 7) * 31;
-				int y = (i / 7) * -7;
 				xmlCps += GetView("Checkpoints/Cp.xml",
-					"x", x.ToString(),
-					"y", y.ToString(),
-					"n", (i + 1).ToString(),
+					"x", (i % 7) * 31,
+					"y", (i / 7) * -7,
+					"n", i + 1,
 					"time", Utils.TimeString(cp.m_time),
 					"name", Utils.XmlEntities(cp.m_player.NoLinkNickname));
 			}
@@ -85,6 +83,10 @@ namespace Nimania.Plugins
 			} else {
 				SendViewToLogin(login, "Checkpoints/Widget.xml", "cps", xmlCps);
 			}
+
+			SendView("Checkpoints/BestCompare.xml",
+				"LOCAL", true,
+				"DEDI", false);
 		}
 
 		public override void SoftReload()

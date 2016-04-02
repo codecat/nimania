@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArrayExtensions.cs" />
     <Compile Include="ConfigFile.cs" />
     <Compile Include="DbDriver.cs" />
     <Compile Include="DbDrivers\Mysql.cs" />

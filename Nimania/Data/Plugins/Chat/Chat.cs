@@ -77,12 +77,13 @@ namespace Nimania.Plugins
 								login += "(" + ply.m_login + ")";
 
 								xmlItems += GetView("Chat/PlayersItem.xml",
-									"y", (-3.5 * i).ToString(),
+									"y", (-3.5 * i),
 									"name", Utils.XmlEntities(ply.m_nickname),
 									"login", Utils.XmlEntities(login));
 							}
 						}
-						SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true, "items", xmlItems);
+						SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true,
+							"items", xmlItems);
 					}
 					break;
 
@@ -93,10 +94,10 @@ namespace Nimania.Plugins
 								var map = m_game.m_maps[i];
 
 								xmlItems += GetView("Chat/MapsItem.xml",
-									"y", (-3.5 * i).ToString(),
+									"y", (-3.5 * i),
 									"name", Utils.XmlEntities(map.Name),
 									"author", Utils.XmlEntities(map.Author),
-									"karma", map.Karma.ToString(),
+									"karma", map.Karma,
 									"gold", Utils.TimeString(map.m_timeGold),
 									"uid", map.UId);
 							}
