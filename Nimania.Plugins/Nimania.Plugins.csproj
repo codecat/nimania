@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -36,6 +36,9 @@
     </Compile>
     <Compile Include="..\Nimania\Data\Plugins\Chat\Chat.cs">
       <Link>Plugins\Chat\Chat.cs</Link>
+    </Compile>
+    <Compile Include="..\Nimania\Data\Plugins\CheckpointCompare\CheckpointCompare.cs">
+      <Link>Plugins\CheckpointCompare\CheckpointCompare.cs</Link>
     </Compile>
     <Compile Include="..\Nimania\Data\Plugins\Checkpoints\Checkpoints.cs">
       <Link>Plugins\Checkpoints\Checkpoints.cs</Link>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		private string m_connectionString;
 		private MySqlConnection m_connection;
+
+		private List<Type> m_existingModelTables = new List<Type>();
 
 		Mutex m_threadLock = new Mutex();
 
@@ -131,8 +134,110 @@ namespace Nimania.Runtime.DbDrivers
 			throw new Exception("Unknown type to encode: " + o.GetType().Name);
 		}
 
+		private string ModelCreateQuery(Type type)
+		{
+			string tableName = Tablename(type);
+
+			FieldInfo[] fields = type.GetFields();
+			bool hasID = false;
+
+			string ret = "CREATE TABLE `" + tableName + "` (";
+
+			foreach (FieldInfo fi in fields) {
+				if (!char.IsUpper(fi.Name[0]) || fi.Name.StartsWith("m_")) {
+					continue;
+				}
+
+				ret += "`" + fi.Name + "` ";
+
+				int customLength = -1;
+				DbFieldLengthAttribute attrib = fi.GetCustomAttribute<DbFieldLengthAttribute>();
+				if (attrib != null) {
+					customLength = attrib.m_length;
+				}
+
+				string colType = "";
+				int colTypeLen = 0;
+				string colParams = "";
+
+				if (fi.FieldType == typeof(int) || fi.FieldType == typeof(bool)) {
+					colType = "int";
+					colTypeLen = 11;
+
+				} else if (fi.FieldType == typeof(string)) {
+					colType = "varchar";
+					colTypeLen = 255;
+					colParams = "CHARACTER SET utf8 COLLATE utf8_general_ci";
+
+				} else if (fi.FieldType.BaseType == typeof(DbModel)) {
+					// This is a relational type
+					colType = "int";
+					colTypeLen = 11;
+
+					EnsureExists(fi.FieldType);
+				}
+
+				if (colType == "") {
+					m_logger.Error("Couldn't figure out database column type for field '{0}' with type '{1}' for table creation query!", fi.Name, fi.FieldType.FullName);
+					continue;
+				}
+				if (customLength != -1) {
+					colTypeLen = customLength;
+				}
+
+				ret += colType + "(" + colTypeLen + ") " + colParams + " NOT NULL";
+				if (fi.Name == "ID") {
+					hasID = true;
+					ret += " AUTO_INCREMENT";
+				}
+				ret += ", ";
+			}
+
+			if (hasID) {
+				ret += "PRIMARY KEY (`ID`)";
+			}
+			ret += ") ENGINE=InnoDB DEFAULT CHARACTER SET=utf8 COLLATE=utf8_general_ci";
+			if (hasID) {
+				ret += " AUTO_INCREMENT=1";
+			}
+			ret += " ROW_FORMAT=COMPACT;";
+
+			return ret;
+		}
+
+		private void EnsureExists<T>()
+		{
+			EnsureExists(typeof(T));
+		}
+
+		private void EnsureExists(Type type)
+		{
+			if (m_existingModelTables.Contains(type)) {
+				return;
+			}
+
+			string tableName = Tablename(type);
+
+			var rows = Query("SHOW TABLES");
+			bool found = false;
+			foreach (var row in rows) {
+				if (row.Values.ElementAt(0) == tableName) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				Query(ModelCreateQuery(type));
+			}
+
+			m_existingModelTables.Add(type);
+		}
+
 		public override T FindByPk<T>(int id)
 		{
+			EnsureExists<T>();
+
 			string tablename = Tablename<T>();
 			var cachedModel = FindCache(tablename, id);
 			if (cachedModel != null) {
@@ -144,6 +249,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override DbModel FindByPk(int id, Type type)
 		{
+			EnsureExists(type);
+
 			string tablename = Tablename(type);
 			var cachedModel = FindCache(tablename, id);
 			if (cachedModel != null) {
@@ -207,6 +314,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override T FindByAttributes<T>(params dynamic[] attributes)
 		{
+			EnsureExists<T>();
+
 			string tablename = Tablename<T>();
 
 			string query = QueryByAttributes<T>(attributes, null);
@@ -237,6 +346,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override T[] FindAllByAttributes<T>(dynamic[] attributes, DbQueryOptions options)
 		{
+			EnsureExists<T>();
+
 			string tablename = Tablename<T>();
 			string primaryKey = PrimaryKey<T>();
 
@@ -269,6 +380,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override T[] FindAll<T>(DbQueryOptions options)
 		{
+			EnsureExists<T>();
+
 			string tablename = Tablename<T>();
 			string primaryKey = PrimaryKey<T>();
 
@@ -296,6 +409,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override void Save(DbModel model)
 		{
+			EnsureExists(model.GetType());
+
 			if (!model.m_loaded) {
 				Insert(model);
 				return;
@@ -329,6 +444,8 @@ namespace Nimania.Runtime.DbDrivers
 
 		public override void Insert(DbModel model)
 		{
+			EnsureExists(model.GetType());
+
 			var type = model.GetType();
 			var tableName = Tablename(type);
 			var primaryKey = PrimaryKey(type);
