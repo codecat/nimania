@@ -1,12 +1,29 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manialink version="2" id="DedimaniaWidget">
 	<frame posn="-160 76">
-		<!--<quad sizen="45 91" style="Bgs1InRace" substyle="BgCard" />-->
 		<quad posn="-1 0" sizen="47 4" style="Bgs1InRace" substyle="BgCard" />
 		<label posn="0.5 -0.5" text="Dedimania Records" style="TextCardSmallScores2" />
 
 		<frame posn="0 -4">
 			<?=items?>
 		</frame>
+
+		<?=arrowLocal?>
+		<?=arrows?>
 	</frame>
+	<script><!--
+		main() {
+			declare onlineArrow <=> (Page.GetFirstChild("arrow_" ^ LocalUser.Login) as CMlFrame);
+			if (onlineArrow != Null) {
+				onlineArrow.Hide();
+			}
+			declare arrow <=> (Page.GetFirstChild("local") as CMlFrame);
+			declare entry <=> (Page.GetFirstChild("ply_" ^ LocalUser.Login) as CMlFrame);
+			if (entry != Null) {
+				arrow.RelativePosition.Y = entry.RelativePosition.Y - 4;
+			} else {
+				arrow.Hide();
+			}
+		}
+	--></script>
 </manialink>

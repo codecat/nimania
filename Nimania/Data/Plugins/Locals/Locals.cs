@@ -176,13 +176,15 @@ namespace Nimania.Plugins
 					var player = m_game.GetPlayer(time.Player.Login);
 					if (player != null && player.m_connected) {
 						xmlArrows += GetView("ListArrows/ArrowPlayer.xml",
+							"x", -45,
 							"y", (-4.0 - i * 3.5),
 							"login", Utils.XmlEntities(player.m_login));
 					}
 				}
 			}
 
-			var arrowLocal = GetView("ListArrows/ArrowLocal.xml");
+			var arrowLocal = GetView("ListArrows/ArrowLocal.xml",
+				"x", -45);
 
 			if (login == "") {
 				SendView("Locals/Widget.xml",

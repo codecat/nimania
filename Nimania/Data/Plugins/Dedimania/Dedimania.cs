@@ -160,8 +160,9 @@ namespace Nimania.Plugins
 			lock (m_dediTimes) {
 				bool hadTime = false;
 
-				//TODO: m_maxDedi is not consistent - players who donated can have 60 or 100
-				int ct = Math.Min(m_dediTimes.Count, m_maxDedi);
+				int maxRank = Math.Max(m_maxDedi, player.m_userData.Get<int>("Dedimania.MaxRank"));
+
+				int ct = Math.Min(m_dediTimes.Count, maxRank);
 				for (int i = 0; i < ct; i++) {
 					var dediTime = m_dediTimes[i];
 					if (dediTime.Login == player.m_login) {
@@ -393,6 +394,14 @@ namespace Nimania.Plugins
 				return;
 			}
 
+			foreach (var ply in dediRes.Value.Players) {
+				var player = m_game.GetPlayer(ply.Login);
+				if (player != null) {
+					int maxRank = int.Parse(ply.MaxRank);
+					player.m_userData.Set("Dedimania.MaxRank", maxRank);
+				}
+			}
+
 			m_lastUpdate = DateTime.Now;
 			m_maxDedi = dediRes.Value.ServerMaxRank;
 			SendChat("$f00" + dediRes.Value.Records.Length + "$fff dedimania times on this map");
@@ -430,6 +439,7 @@ namespace Nimania.Plugins
 		{
 			// sadly, we are forced to send the entire thing every time it updates. :(
 			var xmlItems = "";
+			var xmlArrows = "";
 			lock (m_dediTimes) {
 				int ct = Math.Min(m_dediTimes.Count, 25);
 				for (int i = 0; i < ct; i++) {
@@ -438,14 +448,32 @@ namespace Nimania.Plugins
 						"y", (-3.5 * i),
 						"place", (i + 1),
 						"name", Utils.XmlEntities(Utils.StripLinkCodes(time.NickName)),
+						"login", Utils.XmlEntities(time.Login),
 						"time", Utils.TimeString(time.Time));
+
+					var player = m_game.GetPlayer(time.Login);
+					if (player != null && player.m_connected) {
+						xmlArrows += GetView("ListArrows/ArrowPlayer.xml",
+							"x", 49,
+							"y", (-4.0 - i * 3.5),
+							"login", Utils.XmlEntities(player.m_login));
+					}
 				}
 			}
 
+			var arrowLocal = GetView("ListArrows/ArrowLocal.xml",
+				"x", 49);
+
 			if (login == "") {
-				SendView("Dedimania/Widget.xml", "items", xmlItems);
+				SendView("Dedimania/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal,
+					"arrows", xmlArrows);
 			} else {
-				SendViewToLogin(login, "Dedimania/Widget.xml", "items", xmlItems);
+				SendViewToLogin(login, "Dedimania/Widget.xml",
+					"items", xmlItems,
+					"arrowLocal", arrowLocal,
+					"arrows", xmlArrows);
 			}
 		}
 

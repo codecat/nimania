@@ -1,4 +1,4 @@
-<frame posn="-45 <?=y?>" id="arrow_<?=login?>">
+<frame posn="<?=x?> <?=y?>" id="arrow_<?=login?>">
 	<quad bgcolor="FF0F" posn="-0.5 0 -1" sizen="3 3" halign="right" />
 	<quad style="Bgs1InRace" substyle="BgCard" posn="-0.5 0" sizen="3 3" halign="right" />
 </frame>

@@ -100,7 +100,8 @@ namespace Nimania.Plugins
 				}
 			}
 
-			var arrowLocal = GetView("ListArrows/ArrowLocal.xml");
+			var arrowLocal = GetView("ListArrows/ArrowLocal.xml",
+				"x", -45);
 
 			if (login == "") {
 				SendView("Live/Widget.xml",
