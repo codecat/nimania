@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -16,6 +17,11 @@ namespace Nimania
 
 		static void Main(string[] args)
 		{
+			CultureInfo ci = new CultureInfo("en-US");
+			Thread.CurrentThread.CurrentUICulture = ci;
+			Thread.CurrentThread.CurrentCulture = ci;
+			CultureInfo.DefaultThreadCurrentCulture = ci;
+
 			while (!Shutdown) {
 				Running = true;
 
