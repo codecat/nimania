@@ -162,7 +162,7 @@ namespace Nimania.Runtime
 						}
 
 						string expression = line.Substring(iStart + 3);
-						int iEnd = expression.IndexOf("?>");
+						int iEnd = expression.IndexOf("$>");
 						expression = expression.Substring(0, iEnd);
 
 						var exp = new Expression(expression);

@@ -8,7 +8,7 @@
 
 		<quad sizen="150 88" bgcolor="2227" />
 
-		<include src="Scrollview/Scrollview.xml" scrollid="playerlist" contents="?items" contentsheight="?itemsheight" />
+		<include src="Scrollview/Scrollview.xml" width="146" height="88" scrollid="playerlist" contents="?items" contentsheight="?itemsheight" />
 	</frame>
 	<script><!--
 		main() {

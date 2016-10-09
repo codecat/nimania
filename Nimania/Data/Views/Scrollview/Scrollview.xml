@@ -1,5 +1,5 @@
-<frame posn="<$= width / 2 - 1.5 ?> <$= -(height / 2) ?>" clip="1" clipsizen="<?=width?> <?=height?>">
-	<frame posn="<$= -(width / 2 - 1.5) ?> <$= height / 2 ?> 1">
+<frame posn="<$= width / 2 - 1.5 $> <$= -(height / 2) $>" clip="1" clipsizen="<?=width?> <?=height?>">
+	<frame posn="<$= -(width / 2 - 1.5) $> <$= height / 2 $> 1">
 		<frame id="scroll_contents_<?=scrollid?>">
 			<?=contents?>
 		</frame>
