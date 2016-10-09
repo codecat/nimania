@@ -134,6 +134,51 @@ namespace Nimania.Runtime.DbDrivers
 			throw new Exception("Unknown type to encode: " + o.GetType().Name);
 		}
 
+		private string FieldInfoQuery(FieldInfo fi)
+		{
+			string ret = "`" + fi.Name + "` ";
+
+			int customLength = -1;
+			DbFieldLengthAttribute attrib = fi.GetCustomAttribute<DbFieldLengthAttribute>();
+			if (attrib != null) {
+				customLength = attrib.m_length;
+			}
+
+			string colType = "";
+			int colTypeLen = 0;
+			string colParams = "";
+
+			if (fi.FieldType == typeof(int) || fi.FieldType == typeof(bool)) {
+				colType = "int";
+				colTypeLen = 11;
+
+			} else if (fi.FieldType == typeof(string)) {
+				colType = "varchar";
+				colTypeLen = 255;
+				colParams = "CHARACTER SET utf8 COLLATE utf8_general_ci";
+
+			} else if (fi.FieldType.BaseType == typeof(DbModel)) {
+				// This is a relational type
+				colType = "int";
+				colTypeLen = 11;
+			}
+
+			if (colType == "") {
+				m_logger.Error("Couldn't figure out database column type for field '{0}' with type '{1}' for table creation query!", fi.Name, fi.FieldType.FullName);
+				return "";
+			}
+			if (customLength != -1) {
+				colTypeLen = customLength;
+			}
+
+			ret += colType + "(" + colTypeLen + ") " + colParams + " NOT NULL";
+			if (fi.Name == "ID") {
+				ret += " AUTO_INCREMENT";
+			}
+
+			return ret;
+		}
+
 		private string ModelCreateQuery(Type type)
 		{
 			string tableName = Tablename(type);
@@ -148,49 +193,17 @@ namespace Nimania.Runtime.DbDrivers
 					continue;
 				}
 
-				ret += "`" + fi.Name + "` ";
-
-				int customLength = -1;
-				DbFieldLengthAttribute attrib = fi.GetCustomAttribute<DbFieldLengthAttribute>();
-				if (attrib != null) {
-					customLength = attrib.m_length;
-				}
-
-				string colType = "";
-				int colTypeLen = 0;
-				string colParams = "";
-
-				if (fi.FieldType == typeof(int) || fi.FieldType == typeof(bool)) {
-					colType = "int";
-					colTypeLen = 11;
-
-				} else if (fi.FieldType == typeof(string)) {
-					colType = "varchar";
-					colTypeLen = 255;
-					colParams = "CHARACTER SET utf8 COLLATE utf8_general_ci";
-
-				} else if (fi.FieldType.BaseType == typeof(DbModel)) {
-					// This is a relational type
-					colType = "int";
-					colTypeLen = 11;
-
+				if (fi.FieldType.BaseType == typeof(DbModel)) {
 					EnsureExists(fi.FieldType);
 				}
 
-				if (colType == "") {
-					m_logger.Error("Couldn't figure out database column type for field '{0}' with type '{1}' for table creation query!", fi.Name, fi.FieldType.FullName);
-					continue;
+				string fiq = FieldInfoQuery(fi);
+				if (fiq != "") {
+					ret += fiq + ", ";
+					if (fi.Name == "ID") {
+						hasID = true;
+					}
 				}
-				if (customLength != -1) {
-					colTypeLen = customLength;
-				}
-
-				ret += colType + "(" + colTypeLen + ") " + colParams + " NOT NULL";
-				if (fi.Name == "ID") {
-					hasID = true;
-					ret += " AUTO_INCREMENT";
-				}
-				ret += ", ";
 			}
 
 			if (hasID) {
@@ -215,6 +228,7 @@ namespace Nimania.Runtime.DbDrivers
 			if (m_existingModelTables.Contains(type)) {
 				return;
 			}
+			m_existingModelTables.Add(type);
 
 			string tableName = Tablename(type);
 
@@ -228,10 +242,63 @@ namespace Nimania.Runtime.DbDrivers
 			}
 
 			if (!found) {
+				m_logger.Info("Creating table '{0}'", tableName);
 				Query(ModelCreateQuery(type));
+				return;
 			}
 
-			m_existingModelTables.Add(type);
+			List<FieldInfo> addedFields = new List<FieldInfo>();
+			List<string> removedFields = new List<string>();
+
+			var columns = Query("EXPLAIN `" + tableName + "`");
+			var classFields = type.GetFields();
+
+			foreach (var col in columns) {
+				removedFields.Add(col["Field"]);
+			}
+
+			foreach (var fi in classFields) {
+				if (!char.IsUpper(fi.Name[0]) || fi.Name.StartsWith("m_")) {
+					continue;
+				}
+				addedFields.Add(fi);
+				removedFields.Remove(fi.Name);
+			}
+
+			foreach (var col in columns) {
+				int i = addedFields.FindIndex((fi) => fi.Name == col["Field"]);
+				if (i != -1) {
+					addedFields.RemoveAt(i);
+				}
+			}
+
+			if (addedFields.Count == 0 && removedFields.Count == 0) {
+				return;
+			}
+
+			m_logger.Info("Updating table '{0}' (+{1} -{2})", tableName, addedFields.Count, removedFields.Count);
+
+			string alterQuery = "ALTER TABLE `" + tableName + "` ";
+
+			bool comma = false;
+
+			foreach (var fi in removedFields) {
+				if (comma) {
+					alterQuery += ",";
+				}
+				alterQuery += "DROP COLUMN `" + fi + "`";
+				comma = true;
+			}
+
+			foreach (var fi in addedFields) {
+				if (comma) {
+					alterQuery += ",";
+				}
+				alterQuery += "ADD COLUMN " + FieldInfoQuery(fi);
+				comma = true;
+			}
+
+			Query(alterQuery);
 		}
 
 		public override T FindByPk<T>(int id)

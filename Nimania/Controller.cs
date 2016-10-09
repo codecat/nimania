@@ -12,8 +12,6 @@ using Nimania.Runtime.DbDrivers;
 using Nimania.Runtime.DbModels;
 using NLog;
 
-//TODO: Better (thread-safe) logging
-
 namespace Nimania
 {
 	public class Controller

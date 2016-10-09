@@ -11,6 +11,7 @@ namespace Nimania.Runtime.DbModels
 		public static string Tablename { get { return "maps"; } }
 
 		public int ID;
+		[DbFieldLength(27)]
 		public string UId;
 		public string Name;
 		public string Author;
