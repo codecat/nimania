@@ -102,7 +102,9 @@ namespace Nimania.Plugins
 									"uid", map.UId);
 							}
 						}
-						SendViewToLogin(player.m_login, "Chat/Maps.xml", "items", xmlItems);
+						SendViewToLogin(player.m_login, "Chat/Maps.xml",
+							"items", xmlItems,
+							"scrollheight", (3.5 * m_game.m_maps.Count));
 					}
 					break;
 
