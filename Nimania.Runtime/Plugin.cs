@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using GbxRemoteNet;
 using NLog;
 using Nimania.Runtime.DbModels;
+using NCalc;
+using Nimble.Utils;
 
 namespace Nimania.Runtime
 {
@@ -111,7 +113,7 @@ namespace Nimania.Runtime
 			var ret = new StringBuilder();
 			bool skipLines = false;
 			for (int i = 0; i < lines.Length; i++) {
-				var line = lines[i];
+				var line = lines[i].Trim();
 
 				if (line.StartsWith("%if")) {
 					var parse = line.SplitCommandline();
@@ -139,52 +141,104 @@ namespace Nimania.Runtime
 					}
 
 					if (!found) {
-						m_logger.Warn("Encountered %if with unexisting key '{0}' in view '{1}'", key, file);
+						m_logger.Warn("Encountered %if with unexisting key '{0}' in resource '{1}'", key, file);
 						skipLines = true;
 					}
 
 				} else if (line == "%endif") {
 					skipLines = false;
 
-				} else if (line.StartsWith("%include")) {
-					var parse = line.SplitCommandline();
-					var fnm = parse.Get(1);
-
-					List<object> includeKvs = new List<object>(kvs);
-					if (parse.Length > 2) {
-						if (parse.Length % 2 == 0) {
-							for (int j = 2; j < parse.Length; j += 2) {
-								includeKvs.Add(parse[j]);
-								string stringval = parse[j + 1].ToString();
-								if (stringval[0] == '?') {
-									stringval = stringval.Substring(1);
-									bool found = false;
-									for (int k = 0; k < kvs.Length; k += 2) {
-										if (kvs[k].ToString() == stringval) {
-											includeKvs.Add(kvs[k + 1]);
-											found = true;
-											break;
-										}
-									}
-									if (!found) {
-										m_logger.Error("Include key/value pair lookup for '{0}' was not found in %include directive!", stringval);
-									}
-								} else {
-									includeKvs.Add(parse[j + 1]);
-								}
-							}
-						} else {
-							throw new Exception("Uneven amount of key/value params passed to %include!");
-						}
-					}
-
-					ret.Append(GetResource(fnm, includeKvs.ToArray()));
-
 				} else if (!skipLines) {
-					for (int j = 0; j < kvs.Length; j += 2) {
-						line = line.Replace("<?=" + kvs[j].ToString() + "?>", kvs[j + 1].ToString());
+					while (true) {
+						int iStart = line.IndexOf("<$=");
+						if (iStart == -1) {
+							break;
+						}
+
+						string expression = line.Substring(iStart + 3);
+						int iEnd = expression.IndexOf("?>");
+						expression = expression.Substring(0, iEnd);
+
+						var exp = new Expression(expression);
+
+						for (int j = 0; j < kvs.Length; j += 2) {
+							exp.Parameters[kvs[j].ToString()] = kvs[j + 1];
+						}
+
+						string newLine = "";
+						if (iStart > 0) {
+							newLine += line.Substring(0, iStart);
+						}
+						try {
+							newLine += exp.Evaluate().ToString();
+						} catch (Exception ex) {
+							m_logger.Error("Template expression evaluation error in resource '{0}' on line {1}: '{2}'", file, i + 1, ex.Message.Replace("\r\n", " "));
+						}
+						newLine += line.Substring(iStart + 3 + expression.Length + 2);
+						line = newLine;
 					}
-					ret.Append(line.Trim() + "\n");
+					for (int j = 0; j < kvs.Length; j += 2) {
+						string find = "<?=" + kvs[j].ToString() + "?>";
+						string replace = kvs[j + 1].ToString();
+						line = line.Replace(find, replace);
+					}
+
+					if (line.StartsWith("<include ")) {
+						XMLTag tag = SimpleXMLReader.Parse(line.Trim());
+
+						string fnm = tag.Attributes["src"];
+
+						List<object> includeKvs = new List<object>(kvs);
+						foreach (var kv in tag.Attributes) {
+							if (kv.Key == "src") {
+								continue;
+							}
+
+							string stringval = kv.Value;
+							if (stringval[0] == '?') {
+								includeKvs.Add(kv.Key);
+
+								stringval = stringval.Substring(1);
+
+								bool found = false;
+								for (int k = 0; k < kvs.Length; k += 2) {
+									if (kvs[k].ToString() == stringval) {
+										includeKvs.Add(kvs[k + 1]);
+										found = true;
+										break;
+									}
+								}
+
+								if (!found) {
+									m_logger.Error("Include key/value pair lookup for '?{0}' was not found in %include directive!", stringval);
+								}
+
+							} else if (stringval[0] == '=') {
+								stringval = stringval.Substring(1);
+
+								bool found = false;
+								for (int k = 0; k < includeKvs.Count; k += 2) {
+									if (includeKvs[k].ToString() == stringval) {
+										includeKvs[k] = kv.Key;
+										found = true;
+										break;
+									}
+								}
+
+								if (!found) {
+									m_logger.Error("Include key/value pair lookup for '={0}' was not found in %include directive!", stringval);
+								}
+
+							} else {
+								includeKvs.Add(kv.Key);
+								includeKvs.Add(kv.Value);
+							}
+						}
+
+						ret.Append(GetResource(fnm, includeKvs.ToArray()) + "\n");
+					}
+
+					ret.Append(line + "\n");
 				}
 			}
 			return ret.ToString();

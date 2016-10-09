@@ -8,7 +8,7 @@
 
 		<quad sizen="150 88" bgcolor="2227" />
 
-%include "Scrollview/Scrollview.xml" scrollid playerlist contents ?items contentsheight ?itemsheight
+		<include src="Scrollview/Scrollview.xml" scrollid="playerlist" contents="?items" contentsheight="?itemsheight" />
 	</frame>
 	<script><!--
 		main() {

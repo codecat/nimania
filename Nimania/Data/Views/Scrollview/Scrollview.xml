@@ -1,15 +1,16 @@
-<frame posn="71.5 -44" clip="1" clipsizen="146 88">
-	<frame posn="-71 44 1">
+<frame id="scroll_frame1_<?=scrollid?>" clip="1" clipsizen="<?=width?> <?=height?>">
+	<frame id="scroll_frame2_<?=scrollid?>">
 		<frame id="scroll_contents_<?=scrollid?>">
 			<?=contents?>
 		</frame>
 	</frame>
 </frame>
 
-<quad id="scroll_trough_<?=scrollid?>" posn="146 0" sizen="4 88" bgcolor="2227" />
-<quad id="scroll_handle_<?=scrollid?>" posn="146 0 1" sizen="4 20" style="Bgs1InRace" substyle="BgCard" scriptevents="1" />
+<quad id="scroll_trough_<?=scrollid?>" posn="<?=width?> 0" sizen="4 <?=height?>" bgcolor="2227" />
+<quad id="scroll_handle_<?=scrollid?>" posn="<?=width?> 0 1" sizen="4 20" style="Bgs1InRace" substyle="BgCard" scriptevents="1" />
 
 <script><!--
+	declare Boolean scrollInit_<?=scrollid?>;
 	declare Boolean overHandle_<?=scrollid?>;
 	declare Real overHandleY_<?=scrollid?>;
 
@@ -20,6 +21,20 @@
 		declare scrollHandle <=> (Page.GetFirstChild("scroll_handle_<?=scrollid?>") as CMlQuad);
 		declare scrollHeight = <?=contentsheight?>;
 
+		if (!scrollInit_<?=scrollid?>) {
+			declare scrollFrame1 <=> (Page.GetFirstChild("scroll_frame1_<?=scrollid?>") as CMlFrame);
+			declare scrollFrame2 <=> (Page.GetFirstChild("scroll_frame2_<?=scrollid?>") as CMlFrame);
+
+			declare width = scrollFrame1.ClipWindowSize.X;
+			declare height = scrollFrame1.ClipWindowSize.Y;
+			scrollFrame1.RelativePosition.X = (width / 2.0 - 1.5);
+			scrollFrame1.RelativePosition.Y = -(height / 2.0);
+			scrollFrame2.RelativePosition.X = -(width / 2.0 - 1.5);
+			scrollFrame2.RelativePosition.Y = (height / 2.0);
+
+			scrollInit_<?=scrollid?> = True;
+		}
+
 		if (scrollContents == Null || scrollTrough == Null || scrollHandle == Null) {
 			return;
 		}
@@ -28,6 +43,12 @@
 			scrollHandle.Size.Y = scrollTrough.Size.Y;
 			return;
 		}
+
+		declare handleSizeFactor = scrollTrough.Size.Y / scrollHeight;
+		if (handleSizeFactor < 0.05) {
+			handleSizeFactor = 0.05;
+		}
+		scrollHandle.Size.Y = handleSizeFactor * scrollTrough.Size.Y;
 
 		foreach (Event in PendingEvents) {
 			log(Event.Type);
