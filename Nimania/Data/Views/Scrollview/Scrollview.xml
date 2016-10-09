@@ -1,0 +1,59 @@
+<frame posn="71.5 -44" clip="1" clipsizen="146 88">
+	<frame posn="-71 44 1">
+		<frame id="scroll_contents_<?=scrollid?>">
+			<?=contents?>
+		</frame>
+	</frame>
+</frame>
+
+<quad id="scroll_trough_<?=scrollid?>" posn="146 0" sizen="4 88" bgcolor="2227" />
+<quad id="scroll_handle_<?=scrollid?>" posn="146 0 1" sizen="4 20" style="Bgs1InRace" substyle="BgCard" scriptevents="1" />
+
+<script><!--
+	declare Boolean overHandle_<?=scrollid?>;
+	declare Real overHandleY_<?=scrollid?>;
+
+	Void Scrollview_<?=scrollid?>()
+	{
+		declare scrollContents <=> (Page.GetFirstChild("scroll_contents_<?=scrollid?>") as CMlFrame);
+		declare scrollTrough <=> (Page.GetFirstChild("scroll_trough_<?=scrollid?>") as CMlQuad);
+		declare scrollHandle <=> (Page.GetFirstChild("scroll_handle_<?=scrollid?>") as CMlQuad);
+		declare scrollHeight = <?=contentsheight?>;
+
+		if (scrollContents == Null || scrollTrough == Null || scrollHandle == Null) {
+			return;
+		}
+
+		if (scrollHeight < scrollTrough.Size.Y) {
+			scrollHandle.Size.Y = scrollTrough.Size.Y;
+			return;
+		}
+
+		foreach (Event in PendingEvents) {
+			log(Event.Type);
+			if (Event.Control == scrollHandle) {
+				if (Event.Type == CMlEvent::Type::MouseClick) {
+					overHandle_<?=scrollid?> = True;
+					overHandleY_<?=scrollid?> = MouseY - scrollHandle.AbsolutePosition.Y;
+				}
+			}
+		}
+
+		if (MouseLeftButton && overHandle_<?=scrollid?>) {
+			declare newY = MouseY - scrollTrough.AbsolutePosition.Y - overHandleY_<?=scrollid?>;
+			if (newY > 0.0) {
+				newY = 0.0;
+			} else if (newY < -(scrollTrough.Size.Y - scrollHandle.Size.Y)) {
+				newY = -(scrollTrough.Size.Y - scrollHandle.Size.Y);
+			}
+			scrollHandle.RelativePosition.Y = newY;
+
+			declare factor = -newY / (scrollTrough.Size.Y - scrollHandle.Size.Y);
+			scrollContents.RelativePosition.Y = (factor * (scrollHeight - scrollTrough.Size.Y));
+		}
+
+		if (!MouseLeftButton) {
+			overHandle_<?=scrollid?> = False;
+		}
+	}
+--></script>

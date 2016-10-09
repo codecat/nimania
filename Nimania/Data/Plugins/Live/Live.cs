@@ -85,7 +85,7 @@ namespace Nimania.Plugins
 						viewName = "Live/ItemPoints.xml";
 					}
 
-					xmlItems += GetView(viewName,
+					xmlItems += GetResource(viewName,
 						"y", (-3.5 * n),
 						"place", (n + 1),
 						"name", Utils.XmlEntities(player.NoLinkNickname),
@@ -100,7 +100,7 @@ namespace Nimania.Plugins
 				}
 			}
 
-			var arrowLocal = GetView("ListArrows/ArrowLocal.xml",
+			var arrowLocal = GetResource("ListArrows/ArrowLocal.xml",
 				"x", -45);
 
 			if (login == "") {

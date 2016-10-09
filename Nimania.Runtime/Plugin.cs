@@ -56,7 +56,7 @@ namespace Nimania.Runtime
 		public void SendView(string file, int timeout, params object[] kvs) { SendView(file, timeout, false, kvs); }
 		public void SendView(string file, int timeout, bool clickHides, params object[] kvs)
 		{
-			string xml = GetView(file, kvs);
+			string xml = GetResource(file, kvs);
 			if (xml == "") {
 				return;
 			}
@@ -68,7 +68,7 @@ namespace Nimania.Runtime
 		public void SendViewToLogin(string login, string file, int timeout, params object[] kvs) { SendViewToLogin(login, file, timeout, false, kvs); }
 		public void SendViewToLogin(string login, string file, int timeout, bool clickHides, params object[] kvs)
 		{
-			string xml = GetView(file, kvs);
+			string xml = GetResource(file, kvs);
 			if (xml == "") {
 				return;
 			}
@@ -91,23 +91,24 @@ namespace Nimania.Runtime
 			m_remote.Execute("ChatSendServerMessageToId", text, id);
 		}
 
-		public string GetView(string file, params object[] kvs)
+		public string GetResource(string file, params object[] kvs)
 		{
 			if (kvs.Length % 2 != 0) {
-				throw new Exception("Uneven amount of params passed to SendView!");
+				throw new Exception("Uneven amount of params passed to GetResource!");
 			}
+
 #if DEBUG
-			string xmlFilename = "../../Data/Views/" + file;
+			string filename = "../../Data/Views/" + file;
 #else
-			string xmlFilename = "Data/Views/" + file;
+			string filename = "Data/Views/" + file;
 #endif
 
-			if (!File.Exists(xmlFilename)) {
-				m_logger.Warn("View not found: " + file);
+			if (!File.Exists(filename)) {
+				m_logger.Warn("Resource not found: " + file);
 				return "";
 			}
-			var lines = File.ReadAllLines(xmlFilename);
-			var xml = new StringBuilder();
+			var lines = File.ReadAllLines(filename);
+			var ret = new StringBuilder();
 			bool skipLines = false;
 			for (int i = 0; i < lines.Length; i++) {
 				var line = lines[i];
@@ -141,16 +142,52 @@ namespace Nimania.Runtime
 						m_logger.Warn("Encountered %if with unexisting key '{0}' in view '{1}'", key, file);
 						skipLines = true;
 					}
+
 				} else if (line == "%endif") {
 					skipLines = false;
+
+				} else if (line.StartsWith("%include")) {
+					var parse = line.SplitCommandline();
+					var fnm = parse.Get(1);
+
+					List<object> includeKvs = new List<object>(kvs);
+					if (parse.Length > 2) {
+						if (parse.Length % 2 == 0) {
+							for (int j = 2; j < parse.Length; j += 2) {
+								includeKvs.Add(parse[j]);
+								string stringval = parse[j + 1].ToString();
+								if (stringval[0] == '?') {
+									stringval = stringval.Substring(1);
+									bool found = false;
+									for (int k = 0; k < kvs.Length; k += 2) {
+										if (kvs[k].ToString() == stringval) {
+											includeKvs.Add(kvs[k + 1]);
+											found = true;
+											break;
+										}
+									}
+									if (!found) {
+										m_logger.Error("Include key/value pair lookup for '{0}' was not found in %include directive!", stringval);
+									}
+								} else {
+									includeKvs.Add(parse[j + 1]);
+								}
+							}
+						} else {
+							throw new Exception("Uneven amount of key/value params passed to %include!");
+						}
+					}
+
+					ret.Append(GetResource(fnm, includeKvs.ToArray()));
+
 				} else if (!skipLines) {
 					for (int j = 0; j < kvs.Length; j += 2) {
 						line = line.Replace("<?=" + kvs[j].ToString() + "?>", kvs[j + 1].ToString());
 					}
-					xml.Append(line.Trim() + "\n");
+					ret.Append(line.Trim() + "\n");
 				}
 			}
-			return xml.ToString();
+			return ret.ToString();
 		}
 
 		public Map LoadMapInfo(GbxValue val)

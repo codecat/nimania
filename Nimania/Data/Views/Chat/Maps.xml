@@ -8,59 +8,12 @@
 
 		<quad sizen="150 88" bgcolor="2227" />
 
-		<frame posn="71.5 -44" clip="1" clipsizen="146 88">
-			<frame posn="-71 44 1">
-				<frame id="scroll_contents">
-					<?=items?>
-				</frame>
-			</frame>
-		</frame>
-
-		<quad id="scroll_trough" posn="146 0" sizen="4 88" bgcolor="2227" />
-		<quad id="scroll_handle" posn="146 0 1" sizen="4 20" style="Bgs1InRace" substyle="BgCard" scriptevents="1" />
+%include "Scrollview/Scrollview.xml" scrollid maplist contents ?items contentsheight ?itemsheight
 	</frame>
 	<script><!--
 		main() {
-			declare scrollContents <=> (Page.GetFirstChild("scroll_contents") as CMlFrame);
-			declare scrollTrough <=> (Page.GetFirstChild("scroll_trough") as CMlQuad);
-			declare scrollHandle <=> (Page.GetFirstChild("scroll_handle") as CMlQuad);
-			declare scrollHeight = <?=scrollheight?>;
-
-			if (scrollContents == Null || scrollTrough == Null || scrollHandle == Null) {
-				return;
-			}
-
-			declare overHandle = False;
-			declare overHandleY = 0.0;
-
 			while (True) {
-				foreach (Event in PendingEvents) {
-					log(Event.Type);
-					if (Event.Control == scrollHandle) {
-						if (Event.Type == CMlEvent::Type::MouseClick) {
-							overHandle = True;
-							overHandleY = MouseY - scrollHandle.AbsolutePosition.Y;
-						}
-					}
-				}
-
-				if (MouseLeftButton && overHandle) {
-					declare newY = MouseY - scrollTrough.AbsolutePosition.Y - overHandleY;
-					if (newY > 0.0) {
-						newY = 0.0;
-					} else if (newY < -(scrollTrough.Size.Y - scrollHandle.Size.Y)) {
-						newY = -(scrollTrough.Size.Y - scrollHandle.Size.Y);
-					}
-					scrollHandle.RelativePosition.Y = newY;
-
-					declare factor = -newY / (scrollTrough.Size.Y - scrollHandle.Size.Y);
-					scrollContents.RelativePosition.Y = (factor * (scrollHeight - scrollTrough.Size.Y));
-				}
-
-				if (!MouseLeftButton) {
-					overHandle = False;
-				}
-
+				Scrollview_maplist();
 				yield;
 			}
 		}

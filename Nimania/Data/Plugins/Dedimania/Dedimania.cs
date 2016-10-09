@@ -444,7 +444,7 @@ namespace Nimania.Plugins
 				int ct = Math.Min(m_dediTimes.Count, 25);
 				for (int i = 0; i < ct; i++) {
 					var time = m_dediTimes[i];
-					xmlItems += GetView("Dedimania/Item.xml",
+					xmlItems += GetResource("Dedimania/Item.xml",
 						"y", (-3.5 * i),
 						"place", (i + 1),
 						"name", Utils.XmlEntities(Utils.StripLinkCodes(time.NickName)),
@@ -453,7 +453,7 @@ namespace Nimania.Plugins
 
 					var player = m_game.GetPlayer(time.Login);
 					if (player != null && player.m_connected) {
-						xmlArrows += GetView("ListArrows/ArrowPlayer.xml",
+						xmlArrows += GetResource("ListArrows/ArrowPlayer.xml",
 							"x", 49,
 							"y", (-4.0 - i * 3.5),
 							"login", Utils.XmlEntities(player.m_login));
@@ -461,7 +461,7 @@ namespace Nimania.Plugins
 				}
 			}
 
-			var arrowLocal = GetView("ListArrows/ArrowLocal.xml",
+			var arrowLocal = GetResource("ListArrows/ArrowLocal.xml",
 				"x", 49);
 
 			if (login == "") {

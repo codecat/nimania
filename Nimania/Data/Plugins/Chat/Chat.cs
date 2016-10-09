@@ -76,24 +76,26 @@ namespace Nimania.Plugins
 								}
 								login += "(" + ply.m_login + ")";
 
-								xmlItems += GetView("Chat/PlayersItem.xml",
+								xmlItems += GetResource("Chat/PlayersItem.xml",
 									"y", (-3.5 * i),
 									"name", Utils.XmlEntities(ply.m_nickname),
 									"login", Utils.XmlEntities(login));
 							}
 						}
 						SendViewToLogin(player.m_login, "Chat/Players.xml", 0, true,
-							"items", xmlItems);
+							"items", xmlItems,
+							"itemsheight", (3.5 * m_game.m_players.Count));
 					}
 					break;
 
-				case "/list": {
+				case "/list":
+				case "/maps": {
 						string xmlItems = "";
 						lock (m_game.m_maps) {
 							for (int i = 0; i < m_game.m_maps.Count; i++) {
 								var map = m_game.m_maps[i];
 
-								xmlItems += GetView("Chat/MapsItem.xml",
+								xmlItems += GetResource("Chat/MapsItem.xml",
 									"y", (-3.5 * i),
 									"name", Utils.XmlEntities(map.Name),
 									"author", Utils.XmlEntities(map.Author),
@@ -104,7 +106,7 @@ namespace Nimania.Plugins
 						}
 						SendViewToLogin(player.m_login, "Chat/Maps.xml",
 							"items", xmlItems,
-							"scrollheight", (3.5 * m_game.m_maps.Count));
+							"itemsheight", (3.5 * m_game.m_maps.Count));
 					}
 					break;
 

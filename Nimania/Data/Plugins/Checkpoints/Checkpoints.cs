@@ -70,7 +70,7 @@ namespace Nimania.Plugins
 			string xmlCps = "";
 			for (int i = 0; i < m_cps.Count; i++) {
 				var cp = m_cps[i];
-				xmlCps += GetView("Checkpoints/Cp.xml",
+				xmlCps += GetResource("Checkpoints/Cp.xml",
 					"x", (i % 7) * 31,
 					"y", (i / 7) * -7,
 					"n", i + 1,

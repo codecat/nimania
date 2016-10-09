@@ -8,6 +8,14 @@
 
 		<quad sizen="150 88" bgcolor="2227" />
 
-		<?=items?>
+%include "Scrollview/Scrollview.xml" scrollid playerlist contents ?items contentsheight ?itemsheight
 	</frame>
+	<script><!--
+		main() {
+			while (True) {
+				Scrollview_playerlist();
+				yield;
+			}
+		}
+	--></script>
 </manialink>
