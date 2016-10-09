@@ -1,5 +1,5 @@
-<frame id="scroll_frame1_<?=scrollid?>" clip="1" clipsizen="<?=width?> <?=height?>">
-	<frame id="scroll_frame2_<?=scrollid?>">
+<frame posn="<$= width / 2 - 1.5 ?> <$= -(height / 2) ?>" clip="1" clipsizen="<?=width?> <?=height?>">
+	<frame posn="<$= -(width / 2 - 1.5) ?> <$= height / 2 ?> 1">
 		<frame id="scroll_contents_<?=scrollid?>">
 			<?=contents?>
 		</frame>
@@ -10,7 +10,6 @@
 <quad id="scroll_handle_<?=scrollid?>" posn="<?=width?> 0 1" sizen="4 20" style="Bgs1InRace" substyle="BgCard" scriptevents="1" />
 
 <script><!--
-	declare Boolean scrollInit_<?=scrollid?>;
 	declare Boolean overHandle_<?=scrollid?>;
 	declare Real overHandleY_<?=scrollid?>;
 
@@ -20,20 +19,6 @@
 		declare scrollTrough <=> (Page.GetFirstChild("scroll_trough_<?=scrollid?>") as CMlQuad);
 		declare scrollHandle <=> (Page.GetFirstChild("scroll_handle_<?=scrollid?>") as CMlQuad);
 		declare scrollHeight = <?=contentsheight?>;
-
-		if (!scrollInit_<?=scrollid?>) {
-			declare scrollFrame1 <=> (Page.GetFirstChild("scroll_frame1_<?=scrollid?>") as CMlFrame);
-			declare scrollFrame2 <=> (Page.GetFirstChild("scroll_frame2_<?=scrollid?>") as CMlFrame);
-
-			declare width = scrollFrame1.ClipWindowSize.X;
-			declare height = scrollFrame1.ClipWindowSize.Y;
-			scrollFrame1.RelativePosition.X = (width / 2.0 - 1.5);
-			scrollFrame1.RelativePosition.Y = -(height / 2.0);
-			scrollFrame2.RelativePosition.X = -(width / 2.0 - 1.5);
-			scrollFrame2.RelativePosition.Y = (height / 2.0);
-
-			scrollInit_<?=scrollid?> = True;
-		}
 
 		if (scrollContents == Null || scrollTrough == Null || scrollHandle == Null) {
 			return;

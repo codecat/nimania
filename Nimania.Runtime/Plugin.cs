@@ -149,6 +149,12 @@ namespace Nimania.Runtime
 					skipLines = false;
 
 				} else if (!skipLines) {
+					for (int j = 0; j < kvs.Length; j += 2) {
+						string find = "<?=" + kvs[j].ToString() + "?>";
+						string replace = kvs[j + 1].ToString();
+						line = line.Replace(find, replace);
+					}
+
 					while (true) {
 						int iStart = line.IndexOf("<$=");
 						if (iStart == -1) {
@@ -176,11 +182,6 @@ namespace Nimania.Runtime
 						}
 						newLine += line.Substring(iStart + 3 + expression.Length + 2);
 						line = newLine;
-					}
-					for (int j = 0; j < kvs.Length; j += 2) {
-						string find = "<?=" + kvs[j].ToString() + "?>";
-						string replace = kvs[j + 1].ToString();
-						line = line.Replace(find, replace);
 					}
 
 					if (line.StartsWith("<include ")) {
