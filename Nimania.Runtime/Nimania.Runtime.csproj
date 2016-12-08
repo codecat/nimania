@@ -74,12 +74,6 @@
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\GbxRemoteNet\GbxRemoteNet.csproj">
-      <Project>{01066ad1-ba78-4fa9-adb5-cdf8f69939c6}</Project>
-      <Name>GbxRemoteNet</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="MySql.Data.dll" />
   </ItemGroup>
   <ItemGroup>

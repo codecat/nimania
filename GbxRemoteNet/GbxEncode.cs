@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 
 namespace GbxRemoteNet
 {
@@ -51,13 +50,13 @@ namespace GbxRemoteNet
 				return ret + "</data></array>";
 			} else if (arg is GbxStruct) {
 				string ret = "<struct>";
-				Type type = arg.GetType();
-				var fields = type.GetFields();
+				TypeInfo type = arg.GetType().GetTypeInfo();
+				var fields = type.DeclaredFields;
 				foreach (var field in fields) {
 					string name = field.Name;
 					var attrs = field.GetCustomAttributes(typeof(GbxStructNameAttribute), false);
-					if (attrs.Length > 0) {
-						var attr = (GbxStructNameAttribute)attrs[0];
+					if (attrs.Count() > 0) {
+						var attr = (GbxStructNameAttribute)attrs.First();
 						name = attr.m_name;
 					}
 					ret += "<member><name>" + Escape(name, bEscape) + "</name><value>" + EncodeValue(field.GetValue(arg)) + "</value></member>";

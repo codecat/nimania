@@ -5,7 +5,6 @@ using System.Text;
 using System.IO;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Dynamic;
 
 using Nimble.Extensions;
 using Nimble.Utils;
@@ -285,66 +284,6 @@ namespace Nimble.XML
           return FindTagByName(strQuery);
         }
       }
-    }
-  }
-
-  public class XmlTagDynamic : DynamicObject
-  {
-    XmlTag tag;
-
-    public XmlTagDynamic(XmlTag t)
-    {
-      tag = t;
-    }
-
-    public override bool TryGetMember(GetMemberBinder binder, out object result)
-    {
-      if (binder.Name == "Value") {
-        result = tag.Value;
-      } else {
-        result = new XmlTagDynamic(tag.FindTagByName(binder.Name));
-      }
-      return true;
-    }
-
-    public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
-    {
-      if (indexes.Length == 2) {
-        if (indexes[0] is string && indexes[1] is string) {
-          result = new XmlTagDynamic(tag.Parent.FindTagByNameAndAttribute(tag.Name, (string)indexes[0], (string)indexes[1]));
-        } else {
-          Debug.Assert(false);
-          result = null;
-          return false;
-        }
-      } else if (indexes.Length == 1) {
-        if (indexes[0] is int) {
-          result = new XmlTagDynamic(tag.Parent.Children[(int)indexes[0]]);
-        } else {
-          Debug.Assert(false);
-          result = null;
-          return false;
-        }
-      } else {
-        Debug.Assert(false);
-        result = null;
-        return false;
-      }
-      return true;
-    }
-
-    public override bool TryConvert(ConvertBinder binder, out object result)
-    {
-      if (binder.Type == typeof(XmlTag)) {
-        result = tag;
-        return true;
-      } else if (binder.Type == typeof(string)) {
-        result = tag.Value;
-        return true;
-      }
-
-      result = null;
-      return false;
     }
   }
 }

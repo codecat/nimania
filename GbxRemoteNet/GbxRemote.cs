@@ -48,7 +48,7 @@ namespace GbxRemoteNet
 			m_connectPort = iPort;
 
 			m_client = new TcpClient();
-			m_client.Connect(strHost, iPort);
+			m_client.ConnectAsync(strHost, iPort).Wait();
 			m_ns = m_client.GetStream();
 			m_writer = new BinaryWriter(m_ns);
 			m_reader = new BinaryReader(m_ns);
@@ -175,7 +175,7 @@ namespace GbxRemoteNet
 		{
 			m_keepReading = false;
 			if (m_client != null) {
-				m_client.Close();
+				m_client.Dispose();
 				m_client = null;
 			}
 		}
@@ -302,44 +302,43 @@ namespace GbxRemoteNet
 
 		public void GenerateDocumentation(string filename)
 		{
-			StreamWriter writer = new StreamWriter(filename);
+			using (StreamWriter writer = new StreamWriter(File.OpenWrite(filename))) {
+				Query("system.listMethods", (GbxValue res) => {
+					var methods = res.Get<List<GbxValue>>();
+					foreach (var method in methods) {
+						string methodName = method.Get<string>();
 
-			Query("system.listMethods", (GbxValue res) => {
-				var methods = res.Get<ArrayList>();
-				foreach (GbxValue method in methods) {
-					string methodName = method.Get<string>();
-
-					Query("system.methodSignature", (GbxValue resSignature) => {
-						var sigs = resSignature.Get<ArrayList>();
-						foreach (GbxValue sig in sigs) {
-							var sigParams = sig.Get<ArrayList>();
-							writer.Write(((GbxValue)sigParams[0]).Get<string>() + " " + methodName + "(");
-							for (int i = 1; i < sigParams.Count; i++) {
-								var value = (GbxValue)sigParams[i];
-								var sigParam = value.Get<string>();
-								writer.Write(sigParam);
-								if (i != sigParams.Count - 1) {
-									writer.Write(", ");
+						Query("system.methodSignature", (GbxValue resSignature) => {
+							var sigs = resSignature.Get<List<GbxValue>>();
+							foreach (var sig in sigs) {
+								var sigParams = sig.Get<List<GbxValue>>();
+								writer.Write(sigParams[0].Get<string>() + " " + methodName + "(");
+								for (int i = 1; i < sigParams.Count; i++) {
+									var value = sigParams[i];
+									var sigParam = value.Get<string>();
+									writer.Write(sigParam);
+									if (i != sigParams.Count - 1) {
+										writer.Write(", ");
+									}
 								}
+								writer.WriteLine(")");
 							}
-							writer.WriteLine(")");
-						}
-					}, methodName).Wait();
+						}, methodName).Wait();
 
-					writer.WriteLine();
+						writer.WriteLine();
 
-					Query("system.methodHelp", (GbxValue resHelp) => {
-						var help = resHelp.Get<string>();
-						writer.WriteLine("  Description:");
-						writer.WriteLine("    " + help);
-					}, methodName).Wait();
+						Query("system.methodHelp", (GbxValue resHelp) => {
+							var help = resHelp.Get<string>();
+							writer.WriteLine("  Description:");
+							writer.WriteLine("    " + help);
+						}, methodName).Wait();
 
-					writer.WriteLine();
-					writer.WriteLine();
-				}
-			}).Wait();
-
-			writer.Close();
+						writer.WriteLine();
+						writer.WriteLine();
+					}
+				}).Wait();
+			}
+			
 			m_logger.Info("Wrote documentation to: " + filename);
 		}
 	}

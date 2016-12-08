@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using System.Dynamic;
 using System.Diagnostics;
 
 using Nimble.Extensions;
@@ -131,27 +130,6 @@ namespace Nimble.XML
     public XmlTag this[string strQuery]
     {
       get { return Root[strQuery]; }
-    }
-
-    public static dynamic operator ~(XmlFile file)
-    {
-      return new XmlFileDynamic(file);
-    }
-  }
-
-  public class XmlFileDynamic : DynamicObject
-  {
-    XmlFile file;
-
-    public XmlFileDynamic(XmlFile f)
-    {
-      file = f;
-    }
-
-    public override bool TryGetMember(GetMemberBinder binder, out object result)
-    {
-      result = new XmlTagDynamic(file.Root.FindTagByName(binder.Name));
-      return true;
     }
   }
 }

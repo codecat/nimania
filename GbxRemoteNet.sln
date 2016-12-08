@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.25928.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet", "GbxRemoteNet\GbxRemoteNet.csproj", "{01066AD1-BA78-4FA9-ADB5-CDF8F69939C6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet.CLI", "GbxRemoteNet.CLI\GbxRemoteNet.CLI.csproj", "{206EE90C-FAED-4558-8483-A40CDC200707}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania", "Nimania\Nimania.csproj", "{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania.Runtime", "Nimania.Runtime\Nimania.Runtime.csproj", "{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet", "GbxRemoteNet\GbxRemoteNet.csproj", "{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{01066AD1-BA78-4FA9-ADB5-CDF8F69939C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{01066AD1-BA78-4FA9-ADB5-CDF8F69939C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{01066AD1-BA78-4FA9-ADB5-CDF8F69939C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{01066AD1-BA78-4FA9-ADB5-CDF8F69939C6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAB1F290-0F15-4C07-BF82-15BBCD2A8744}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

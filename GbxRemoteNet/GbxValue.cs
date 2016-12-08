@@ -60,7 +60,7 @@ namespace GbxRemoteNet
 					m_obj = dt;
 				}
 			} else if (tag.Name == "array") {
-				var array = new ArrayList();
+				var array = new List<GbxValue>();
 				var tagData = tag["data"];
 				foreach (var tagDataValue in tagData.Children) {
 					array.Add(new GbxValue(tagDataValue.Children[0]));
@@ -136,8 +136,8 @@ namespace GbxRemoteNet
 				m_logger.Trace(indent + keyInfo + "(datetime) " + ((DateTime)m_obj));
 			} else if (m_type == GbxValueType.Array) {
 				m_logger.Trace(indent + keyInfo + "(array) [");
-				var arr = (ArrayList)m_obj;
-				foreach (GbxValue v in arr) {
+				var arr = (List<GbxValue>)m_obj;
+				foreach (var v in arr) {
 					v.DumpInfoInternal(depth + 1);
 				}
 				m_logger.Trace(indent + "]");
