@@ -97,14 +97,14 @@ namespace Nimania
 			SetupCore();
 
 			m_logger.Info("Loading plugins..");
-			m_plugins = new PluginManager(m_config, m_remote, m_database);
+			m_plugins = new PluginManager(m_game, m_config, m_remote, m_database);
 			var pluginNames = m_config.GetArray("Plugins", "Plugin");
 			foreach (var name in pluginNames) {
 				var newPlugin = m_plugins.Load(name);
 				if (newPlugin != null) {
 					newPlugin.m_game = m_game;
 				} else {
-					m_remote.Execute("ChatSendServerMessage", "$fffNimania: $f00Failed $fffto load plugin $666" + name);
+					m_logger.Error("Failed to load plugin '{0}'", name);
 				}
 			}
 			m_plugins.Initialize();
@@ -126,6 +126,106 @@ namespace Nimania
 		private void SetupCore()
 		{
 			m_game = new GameInfo();
+
+			// Wait for these because plugin Initializers might need it
+			{
+				var results = m_remote.MultiQueryWait("GetSystemInfo", // 0
+					"GetServerName", "GetServerComment", "GetHideServer", "GetMaxPlayers", "GetMaxSpectators", "GetGameMode", // 1-6
+					"GetCurrentMapInfo", // 7
+					"GetServerPackMask", "GetScriptName" // 8-9
+				);
+
+				m_game.m_serverIP = results[0].Get<string>("PublishedIp");
+				m_game.m_serverPort = results[0].Get<int>("Port");
+				m_game.m_serverLogin = results[0].Get<string>("ServerLogin");
+
+				m_game.m_serverName = results[1].Get<string>();
+				m_game.m_serverComment = results[2].Get<string>();
+				m_game.m_serverPrivate = results[3].Get<int>() == 1;
+				m_game.m_serverMaxPlayers = results[4].Get<int>("CurrentValue");
+				m_game.m_serverMaxSpecs = results[5].Get<int>("CurrentValue");
+				m_game.m_serverGameMode = results[6].Get<int>();
+
+				m_game.m_currentMap = LoadMapInfo(results[7]);
+
+				m_game.m_serverPack = results[8].Get<string>();
+				if (m_game.m_serverGameMode == 0) {
+					m_game.m_serverScript = results[9].Get<string>("CurrentValue");
+				}
+
+				switch (m_game.m_serverPack) {
+					case "Storm":
+						m_game.m_gameType = GameType.ShootMania;
+						break;
+
+					case "Canyon":
+					case "Stadium":
+					case "Valley":
+						m_game.m_gameType = GameType.TrackMania;
+						break;
+
+					default:
+						m_logger.Warn("You're trying to run Nimania on an unsupported game '{0}'. Things might break!", m_game.m_serverPack);
+						break;
+				}
+
+				results = m_remote.MultiQueryWait(new GbxMultiCall() {
+					m_methodName = "GetPlayerList", // 0
+					m_methodParams = new[] { 255, 0, 0 }
+				}, new GbxMultiCall() {
+					m_methodName = "GetCurrentRanking", // 1
+					m_methodParams = new[] { 255, 0 }
+				}, new GbxMultiCall() {
+					m_methodName = "GetMapList", // 2
+					m_methodParams = new[] { 9999, 0 }
+				});
+
+				{
+					var players = results[0].Get<ArrayList>();
+					foreach (GbxValue player in players) {
+						m_game.m_players.Add(LoadPlayerInfo(player));
+					}
+				}
+
+				{
+					var players = results[1].Get<ArrayList>();
+					foreach (GbxValue player in players) {
+						int id = player.Get<int>("PlayerId");
+
+						var ply = m_game.GetPlayer(id);
+						if (ply != null) { // null happens if they are disconnected!
+							if (m_game.m_gameType == GameType.TrackMania && m_game.m_serverGameMode != 0) {
+								ply.m_bestTime = player.Get<int>("BestTime");
+								ply.m_prevBestTime = ply.m_bestTime;
+								ply.m_lastTime = ply.m_bestTime;
+								ply.m_score = player.Get<int>("Score");
+
+								var cps = player.Get<ArrayList>("BestCheckpoints");
+								foreach (GbxValue cp in cps) {
+									int cpt = cp.Get<int>();
+									ply.m_checkpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
+									ply.m_checkpointsAll.Add(cpt);
+									ply.m_bestCheckpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
+								}
+							}
+						}
+					}
+				}
+
+				{
+					var maps = results[2].Get<ArrayList>();
+					foreach (GbxValue map in maps) {
+						m_game.m_maps.Add(LoadMapInfo(map));
+					}
+				}
+			}
+
+			if (m_game.m_serverGameMode == 0) {
+				var dic = new Dictionary<string, object>();
+				dic["S_UseScriptCallbacks"] = true;
+				//dic["S_UseLegacyCallbacks"] = false;
+				m_remote.QueryWait("SetModeScriptSettings", dic);
+			}
 
 			m_remote.AddCallback("TrackMania.PlayerManialinkPageAnswer", (GbxValue[] cb) => {
 				int id = cb[0].Get<int>();
@@ -155,75 +255,6 @@ namespace Nimania
 				plugin.OnAction(player, parse[1], parse.Skip(2).ToArray());
 			});
 
-			// Wait for these because plugin Initializers might need it
-			{
-				var results = m_remote.MultiQueryWait("GetSystemInfo", // 0
-					"GetServerName", "GetServerComment", "GetHideServer", "GetMaxPlayers", "GetMaxSpectators", "GetGameMode", // 1-6
-					"GetCurrentMapInfo" // 7
-				);
-
-				m_game.m_serverIP = results[0].Get<string>("PublishedIp");
-				m_game.m_serverPort = results[0].Get<int>("Port");
-				m_game.m_serverLogin = results[0].Get<string>("ServerLogin");
-
-				m_game.m_serverName = results[1].Get<string>();
-				m_game.m_serverComment = results[2].Get<string>();
-				m_game.m_serverPrivate = results[3].Get<int>() == 1;
-				m_game.m_serverMaxPlayers = results[4].Get<int>("CurrentValue");
-				m_game.m_serverMaxSpecs = results[5].Get<int>("CurrentValue");
-				m_game.m_serverGameMode = results[6].Get<int>();
-
-				m_game.m_currentMap = LoadMapInfo(results[7]);
-
-				results = m_remote.MultiQueryWait(new GbxMultiCall() {
-					m_methodName = "GetPlayerList", // 0
-					m_methodParams = new[] { 255, 0, 0 }
-				}, new GbxMultiCall() {
-					m_methodName = "GetCurrentRanking", // 1
-					m_methodParams = new[] { 255, 0 }
-				}, new GbxMultiCall() {
-					m_methodName = "GetMapList", // 2
-					m_methodParams = new[] { 9999, 0 }
-				});
-
-				{
-					var players = results[0].Get<ArrayList>();
-					foreach (GbxValue player in players) {
-						m_game.m_players.Add(LoadPlayerInfo(player));
-					}
-				}
-
-				{
-					var players = results[1].Get<ArrayList>();
-					foreach (GbxValue player in players) {
-						int id = player.Get<int>("PlayerId");
-
-						var ply = m_game.GetPlayer(id);
-						if (ply != null) { // null happens if they are disconnected!
-							ply.m_bestTime = player.Get<int>("BestTime");
-							ply.m_prevBestTime = ply.m_bestTime;
-							ply.m_lastTime = ply.m_bestTime;
-							ply.m_score = player.Get<int>("Score");
-
-							var cps = player.Get<ArrayList>("BestCheckpoints");
-							foreach (GbxValue cp in cps) {
-								int cpt = cp.Get<int>();
-								ply.m_checkpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
-								ply.m_checkpointsAll.Add(cpt);
-								ply.m_bestCheckpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
-							}
-						}
-					}
-				}
-
-				{
-					var maps = results[2].Get<ArrayList>();
-					foreach (GbxValue map in maps) {
-						m_game.m_maps.Add(LoadMapInfo(map));
-					}
-				}
-			}
-
 			m_remote.AddCallback("TrackMania.BeginChallenge", (GbxValue[] cb) => {
 				m_game.m_currentMap = LoadMapInfo(cb[0]);
 				lock (m_game.m_players) {
@@ -246,7 +277,7 @@ namespace Nimania
 					m_plugins.OnBeginChallenge();
 				});
 				lock (m_game.m_players) {
-					foreach(var player in m_game.m_players) {
+					foreach (var player in m_game.m_players) {
 						player.m_checkpoints.Clear();
 						player.m_checkpointsAll.Clear();
 						player.m_bestCheckpoints.Clear();
@@ -274,7 +305,8 @@ namespace Nimania
 				}, 255, 0);
 			});
 
-			m_remote.AddCallback("TrackMania.EndChallenge", (GbxValue[] cb) => {
+			// This should not be EndRace (EndRace gets called if you retire in Shootmania as well)
+			m_remote.AddCallback(m_game.m_serverGameMode == 0 ? "TrackMania.EndRace" : "TrackMania.EndChallenge", (GbxValue[] cb) => {
 				m_plugins.OnEndChallenge();
 
 				if (m_game.m_queue.Count > 0) {

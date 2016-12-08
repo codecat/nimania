@@ -28,6 +28,8 @@ namespace Nimania.Runtime
 
 		public static Random m_random = new Random();
 
+		public virtual bool Supports(GameType type, string script) { return true; }
+
 		public virtual void Initialize() { }
 		public virtual void Uninitialize() { }
 

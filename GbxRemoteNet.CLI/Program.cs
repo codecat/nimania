@@ -41,6 +41,8 @@ namespace GbxRemoteNet.CLI
 			var rem = new GbxRemote();
 			rem.Connect(hostname, port);
 
+			rem.QueryWait("SetApiVersion", "2013-04-16");
+
 			rem.Query("system.listMethods", (GbxValue res) => {
 				var methods = res.Get<ArrayList>();
 				foreach (GbxValue method in methods) {

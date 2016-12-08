@@ -63,6 +63,12 @@ namespace GbxRemoteNet
 					ret += "<member><name>" + Escape(name, bEscape) + "</name><value>" + EncodeValue(field.GetValue(arg)) + "</value></member>";
 				}
 				return ret + "</struct>";
+			} else if (arg is Dictionary<string, object>) {
+				string ret = "<struct>";
+				foreach (var key in arg.Keys) {
+					ret += "<member><name>" + Escape(key, bEscape) + "</name><value>" + EncodeValue(arg[key]) + "</value></member>";
+				}
+				return ret + "</struct>";
 			}
 
 			System.Diagnostics.Debug.Assert(false);

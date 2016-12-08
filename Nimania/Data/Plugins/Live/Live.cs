@@ -14,6 +14,15 @@ namespace Nimania.Plugins
 
 		public int m_scoreLimit;
 
+		public override bool Supports(GameType type, string script)
+		{
+			if (type == GameType.TrackMania) {
+				return true;
+			}
+
+			return false;
+		}
+
 		public override void Initialize()
 		{
 			ReloadMapInfo();

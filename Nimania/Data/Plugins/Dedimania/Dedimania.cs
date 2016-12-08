@@ -34,6 +34,11 @@ namespace Nimania.Plugins
 
 		public DateTime m_lastUpdate = DateTime.Now;
 
+		public override bool Supports(GameType type, string script)
+		{
+			return type == GameType.TrackMania;
+		}
+
 		public override void Initialize()
 		{
 			m_api = XmlRpcProxyGen.Create<IDedimaniaAPI>();

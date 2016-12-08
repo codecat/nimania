@@ -22,14 +22,16 @@ namespace Nimania
 
 		public int m_errorCount = 0;
 
+		private GameInfo m_game;
 		private ConfigFile m_config;
 		private GbxRemote m_remote;
 		private DbDriver m_database;
 
 		private List<AsmHelper> m_scripting = new List<AsmHelper>();
 
-		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
+		public PluginManager(GameInfo game, ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
+			m_game = game;
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
@@ -80,6 +82,11 @@ namespace Nimania
 			newPlugin.m_config = m_config;
 			newPlugin.m_remote = m_remote;
 			newPlugin.m_database = m_database;
+
+			if (!newPlugin.Supports(m_game.m_gameType, m_game.m_serverScript)) {
+				return null;
+			}
+
 			Add(newPlugin);
 			return newPlugin;
 		}

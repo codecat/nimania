@@ -13,6 +13,15 @@ namespace Nimania.Plugins
 	{
 		public List<LocalTime> m_localTimes = new List<LocalTime>();
 
+		public override bool Supports(GameType type, string script)
+		{
+			if (type == GameType.TrackMania) {
+				return true;
+			}
+
+			return false;
+		}
+
 		public override void Initialize()
 		{
 			m_game.m_userData.AddCategory("Locals");

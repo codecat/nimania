@@ -6,12 +6,15 @@
 
 		<quad posn="150 -1 1" sizen="6 6" style="Icons64x64_1" substyle="Close" action="Chat.ClosePlayers" halign="right" valign="bottom" />
 
+		<quad posn="0 0 -1" sizen="150 88" style="Bgs1" substyle="BgDialogBlur" />
 		<quad sizen="150 88" bgcolor="2227" />
 
 		<include src="Scrollview/Scrollview.xml" width="146" height="88" scrollid="playerlist" contents="?items" contentsheight="?itemsheight" />
 	</frame>
 	<script><!--
 		main() {
+			EnableMenuNavigationInputs = True;
+
 			while (True) {
 				Scrollview_playerlist();
 				yield;

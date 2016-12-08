@@ -7,6 +7,14 @@ using Nimania.Runtime.DbModels;
 
 namespace Nimania.Runtime
 {
+	public enum GameType
+	{
+		Unknown,
+
+		TrackMania,
+		ShootMania
+	}
+
 	public class GameInfo
 	{
 		public UserData m_userData = new UserData();
@@ -15,6 +23,10 @@ namespace Nimania.Runtime
 		public List<PlayerInfo> m_players = new List<PlayerInfo>();
 		public List<Map> m_maps = new List<Map>();
 		public List<string> m_queue = new List<string>();
+
+		public GameType m_gameType;
+		public string m_serverPack;
+		public string m_serverScript;
 
 		public string m_serverIP;
 		public int m_serverPort;
