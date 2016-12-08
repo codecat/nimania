@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
 
 namespace Nimania.Runtime
 {
-	public abstract class DbModel : ICloneable
+	public abstract class DbModel
 	{
 		internal DbDriver m_database;
 		internal Dictionary<string, object> m_originalData = new Dictionary<string, object>();
@@ -17,9 +18,9 @@ namespace Nimania.Runtime
 		internal void LoadRow(Dictionary<string, string> row)
 		{
 			m_originalData.Clear();
-			var type = GetType();
+			var type = GetType().GetTypeInfo();
 			foreach (var columnName in row.Keys) {
-				var field = type.GetField(columnName);
+				var field = type.GetDeclaredField(columnName);
 				if (field == null) {
 					continue;
 				}
@@ -31,7 +32,8 @@ namespace Nimania.Runtime
 				} else if (field.FieldType == typeof(bool)) {
 					v = (row[columnName] != "0");
 				} else {
-					if (field.FieldType.BaseType != typeof(DbModel)) {
+					TypeInfo ti = field.FieldType.GetTypeInfo();
+					if (ti.BaseType != typeof(DbModel)) {
 						throw new Exception("Unknown column/field type: " + field.FieldType.Name + " for column '" + columnName + "'");
 					}
 				}
@@ -49,7 +51,8 @@ namespace Nimania.Runtime
 				if (field == null) {
 					continue;
 				}
-				if (field.FieldType.BaseType != typeof(DbModel)) {
+				var ti = field.FieldType.GetTypeInfo();
+				if (ti.BaseType != typeof(DbModel)) {
 					continue;
 				}
 				var model = m_database.FindByPk(int.Parse(row[columnName]), field.FieldType);
@@ -111,7 +114,5 @@ namespace Nimania.Runtime
 
 		public virtual void Save() { m_database.Save(this); }
 		public virtual void Insert() { m_database.Insert(this); }
-
-		public object Clone() { return MemberwiseClone(); }
 	}
 }

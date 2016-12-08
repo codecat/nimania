@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -49,12 +50,12 @@ namespace Nimania.Runtime
 
 		public string Tablename<T>()
 		{
-			return Tablename(typeof(T));
+			return Tablename(typeof(T).GetTypeInfo());
 		}
 
-		internal string Tablename(Type t)
+		internal string Tablename(TypeInfo t)
 		{
-			var propTableName = t.GetProperty("Tablename");
+			var propTableName = t.GetDeclaredProperty("Tablename");
 			if (propTableName == null) {
 				throw new Exception("Static 'Tablename' property not defined!");
 			}
@@ -63,12 +64,12 @@ namespace Nimania.Runtime
 
 		public string PrimaryKey<T>()
 		{
-			return PrimaryKey(typeof(T));
+			return PrimaryKey(typeof(T).GetTypeInfo());
 		}
 
-		internal string PrimaryKey(Type t)
+		internal string PrimaryKey(TypeInfo t)
 		{
-			var propPrimaryKey = t.GetProperty("PrimaryKey");
+			var propPrimaryKey = t.GetDeclaredProperty("PrimaryKey");
 			if (propPrimaryKey != null) {
 				return (string)propPrimaryKey.GetValue(null);
 			}

@@ -157,12 +157,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Nimania.Runtime\Nimania.Runtime.csproj">
-      <Project>{cab1f290-0f15-4c07-bf82-15bbcd2a8744}</Project>
-      <Name>Nimania.Runtime</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="CookComputing.XmlRpcV2.dll" />
     <Content Include="CSScriptLibrary.dll" />
     <Content Include="CSScriptLibrary.xml" />

@@ -124,8 +124,9 @@ namespace Nimania.Runtime.DbDrivers
 				return ((int)o).ToString();
 			} else if (o is DbModel) {
 				var type = o.GetType();
-				string primaryKey = PrimaryKey(type);
-				var fieldPk = type.GetField(primaryKey);
+				var ti = type.GetTypeInfo();
+				string primaryKey = PrimaryKey(ti);
+				var fieldPk = ti.GetDeclaredField(primaryKey);
 				if (fieldPk == null) {
 					throw new Exception("Field for primary key '" + primaryKey + "' does not exist in model " + type.Name);
 				}
@@ -148,6 +149,8 @@ namespace Nimania.Runtime.DbDrivers
 			int colTypeLen = 0;
 			string colParams = "";
 
+			var fieldTypeInfo = fi.FieldType.GetTypeInfo();
+
 			if (fi.FieldType == typeof(int) || fi.FieldType == typeof(bool)) {
 				colType = "int";
 				colTypeLen = 11;
@@ -157,7 +160,7 @@ namespace Nimania.Runtime.DbDrivers
 				colTypeLen = 255;
 				colParams = "CHARACTER SET utf8 COLLATE utf8_general_ci";
 
-			} else if (fi.FieldType.BaseType == typeof(DbModel)) {
+			} else if (fi.FieldType.GetTypeInfo().BaseType == typeof(DbModel)) {
 				// This is a relational type
 				colType = "int";
 				colTypeLen = 11;
@@ -181,7 +184,7 @@ namespace Nimania.Runtime.DbDrivers
 
 		private string ModelCreateQuery(Type type)
 		{
-			string tableName = Tablename(type);
+			string tableName = Tablename(type.GetTypeInfo());
 
 			FieldInfo[] fields = type.GetFields();
 			bool hasID = false;
@@ -193,7 +196,7 @@ namespace Nimania.Runtime.DbDrivers
 					continue;
 				}
 
-				if (fi.FieldType.BaseType == typeof(DbModel)) {
+				if (fi.FieldType.GetTypeInfo().BaseType == typeof(DbModel)) {
 					EnsureExists(fi.FieldType);
 				}
 
@@ -230,7 +233,7 @@ namespace Nimania.Runtime.DbDrivers
 			}
 			m_existingModelTables.Add(type);
 
-			string tableName = Tablename(type);
+			string tableName = Tablename(type.GetTypeInfo());
 
 			var rows = Query("SHOW TABLES");
 			bool found = false;
@@ -318,13 +321,15 @@ namespace Nimania.Runtime.DbDrivers
 		{
 			EnsureExists(type);
 
-			string tablename = Tablename(type);
+			var typeInfo = type.GetTypeInfo();
+
+			string tablename = Tablename(typeInfo);
 			var cachedModel = FindCache(tablename, id);
 			if (cachedModel != null) {
 				return cachedModel;
 			}
 
-			string primaryKey = PrimaryKey(type);
+			string primaryKey = PrimaryKey(typeInfo);
 
 			string query = "SELECT * FROM `" + tablename + "` WHERE `" + primaryKey + "`=" + id;
 			var rows = Query(query);
@@ -490,8 +495,9 @@ namespace Nimania.Runtime.DbDrivers
 			}
 
 			var type = model.GetType();
-			var tableName = Tablename(type);
-			var primaryKey = PrimaryKey(type);
+			var typeInfo = type.GetTypeInfo();
+			var tableName = Tablename(typeInfo);
+			var primaryKey = PrimaryKey(typeInfo);
 
 			string query = "UPDATE `" + tableName + "` SET ";
 			for (int i = 0; i < dirtyKeys.Length; i++) {
@@ -514,8 +520,9 @@ namespace Nimania.Runtime.DbDrivers
 			EnsureExists(model.GetType());
 
 			var type = model.GetType();
-			var tableName = Tablename(type);
-			var primaryKey = PrimaryKey(type);
+			var typeInfo = type.GetTypeInfo();
+			var tableName = Tablename(typeInfo);
+			var primaryKey = PrimaryKey(typeInfo);
 
 			string query = "INSERT INTO `" + tableName + "` (";
 			string queryValues = "";
