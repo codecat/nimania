@@ -36,21 +36,17 @@ namespace Nimania
 				.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
 				.AddReferences(
 				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
-				MetadataReference.CreateFromFile("GbxRemoteNet.dll"),
-				MetadataReference.CreateFromFile("Nimania.exe"),
-				MetadataReference.CreateFromFile("Nimania.Runtime.dll"),
-				MetadataReference.CreateFromFile("NLog.dll")
+				MetadataReference.CreateFromFile(typeof(GbxValue).GetTypeInfo().Assembly.Location),
+				MetadataReference.CreateFromFile(typeof(PluginManager).GetTypeInfo().Assembly.Location),
+				MetadataReference.CreateFromFile(typeof(Plugin).GetTypeInfo().Assembly.Location),
+				MetadataReference.CreateFromFile(typeof(Logger).GetTypeInfo().Assembly.Location)
 				);
 
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
 
-#if DEBUG
-			string[] scriptPaths = Directory.GetDirectories("../../Data/Plugins/");
-#else
 			string[] scriptPaths = Directory.GetDirectories("Data/Plugins/");
-#endif
 
 			string[] asmRefs = new string[] { "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2", "NLog" };
 

@@ -26,11 +26,7 @@ namespace Nimania
 			while (!Shutdown) {
 				Running = true;
 
-#if DEBUG
-				CurrentController = new Controller("../../Data/Config.ini");
-#else
 				CurrentController = new Controller("Data/Config.ini");
-#endif
 				CurrentController.Run();
 
 				while (Running) {

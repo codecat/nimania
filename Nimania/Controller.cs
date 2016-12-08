@@ -187,15 +187,15 @@ namespace Nimania
 				});
 
 				{
-					var players = results[0].Get<ArrayList>();
-					foreach (GbxValue player in players) {
+					var players = results[0].Get<List<GbxValue>>();
+					foreach (var player in players) {
 						m_game.m_players.Add(LoadPlayerInfo(player));
 					}
 				}
 
 				{
-					var players = results[1].Get<ArrayList>();
-					foreach (GbxValue player in players) {
+					var players = results[1].Get<List<GbxValue>>();
+					foreach (var player in players) {
 						int id = player.Get<int>("PlayerId");
 
 						var ply = m_game.GetPlayer(id);
@@ -205,8 +205,8 @@ namespace Nimania
 							ply.m_lastTime = ply.m_bestTime;
 							ply.m_score = player.Get<int>("Score");
 
-							var cps = player.Get<ArrayList>("BestCheckpoints");
-							foreach (GbxValue cp in cps) {
+							var cps = player.Get<List<GbxValue>>("BestCheckpoints");
+							foreach (var cp in cps) {
 								int cpt = cp.Get<int>();
 								ply.m_checkpoints.Add(cpt); //TODO: Fixme for multilap: m_game.m_currentMap
 								ply.m_checkpointsAll.Add(cpt);
@@ -217,8 +217,8 @@ namespace Nimania
 				}
 
 				{
-					var maps = results[2].Get<ArrayList>();
-					foreach (GbxValue map in maps) {
+					var maps = results[2].Get<List<GbxValue>>();
+					foreach (var map in maps) {
 						m_game.m_maps.Add(LoadMapInfo(map));
 					}
 				}
@@ -257,8 +257,8 @@ namespace Nimania
 
 			m_remote.AddCallback("TrackMania.EndRound", (GbxValue[] cb) => {
 				m_remote.Query("GetCurrentRanking", (GbxValue res) => {
-					var players = res.Get<ArrayList>();
-					foreach (GbxValue player in players) {
+					var players = res.Get<List<GbxValue>>();
+					foreach (var player in players) {
 						if (player.Get<int>("PlayerId") == 255) {
 							continue;
 						}

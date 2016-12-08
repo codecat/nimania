@@ -224,14 +224,14 @@ namespace GbxRemoteNet
 		public GbxRequest MultiQuery(Action<GbxValue[]> callback, params GbxMultiCall[] methods)
 		{
 			return Query("system.multicall", (GbxValue res) => {
-				var results = res.Get<ArrayList>();
+				var results = res.Get<List<GbxValue>>();
 				var ret = new List<GbxValue>();
-				foreach (GbxValue result in results) {
+				foreach (var result in results) {
 					if (result.m_type == GbxValueType.Struct) {
 						ret.Add(null);
 						continue;
 					}
-					ret.Add((GbxValue)result.Get<ArrayList>()[0]);
+					ret.Add(result.Get<List<GbxValue>>()[0]);
 				}
 				callback(ret.ToArray());
 			}, new dynamic[] { methods });
@@ -240,14 +240,14 @@ namespace GbxRemoteNet
 		public GbxRequest MultiQuery(OnGbxResponse[] callbacks, params GbxMultiCall[] methods)
 		{
 			return Query("system.multicall", (GbxValue res) => {
-				var results = res.Get<ArrayList>();
+				var results = res.Get<List<GbxValue>>();
 				for (int i = 0; i < results.Count; i++) {
-					var result = (GbxValue)results[i];
+					var result = results[i];
 					if (result.m_type == GbxValueType.Struct) {
 						callbacks[i](null);
 						continue;
 					}
-					callbacks[i]((GbxValue)result.Get<ArrayList>()[0]);
+					callbacks[i](result.Get<List<GbxValue>>()[0]);
 				}
 			}, new dynamic[] { methods });
 		}

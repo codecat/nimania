@@ -50,7 +50,7 @@ namespace GbxRemoteNet
 				return ret + "</data></array>";
 			} else if (arg is GbxStruct) {
 				string ret = "<struct>";
-				TypeInfo type = arg.GetType().GetTypeInfo();
+				TypeInfo type = ((object)arg).GetType().GetTypeInfo();
 				var fields = type.DeclaredFields;
 				foreach (var field in fields) {
 					string name = field.Name;
