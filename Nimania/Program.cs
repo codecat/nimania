@@ -18,8 +18,9 @@ namespace Nimania
 		static void Main(string[] args)
 		{
 			CultureInfo ci = new CultureInfo("en-US");
-			Thread.CurrentThread.CurrentUICulture = ci;
-			Thread.CurrentThread.CurrentCulture = ci;
+			CultureInfo.CurrentUICulture = ci;
+			CultureInfo.CurrentCulture = ci;
+			CultureInfo.DefaultThreadCurrentUICulture = ci;
 			CultureInfo.DefaultThreadCurrentCulture = ci;
 
 			while (!Shutdown) {

@@ -5,11 +5,11 @@ VisualStudioVersion = 15.0.25928.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet.CLI", "GbxRemoteNet.CLI\GbxRemoteNet.CLI.csproj", "{206EE90C-FAED-4558-8483-A40CDC200707}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania", "Nimania\Nimania.csproj", "{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GbxRemoteNet", "GbxRemoteNet\GbxRemoteNet.csproj", "{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania.Runtime", "Nimania.Runtime\Nimania.Runtime.csproj", "{B46688F2-B3B5-4C64-B024-8593DB274D26}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimania", "Nimania\Nimania.csproj", "{EDBE574E-B6E8-4EB4-A2C1-0F5C862D8ACB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +21,6 @@ Global
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{206EE90C-FAED-4558-8483-A40CDC200707}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B3EBD6B8-2FF2-4191-AC4A-AF27985D9F95}.Release|Any CPU.Build.0 = Release|Any CPU
 		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{58CF0B67-1CB5-4F58-B87E-CA4C8305A19B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -33,6 +29,10 @@ Global
 		{B46688F2-B3B5-4C64-B024-8593DB274D26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B46688F2-B3B5-4C64-B024-8593DB274D26}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B46688F2-B3B5-4C64-B024-8593DB274D26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EDBE574E-B6E8-4EB4-A2C1-0F5C862D8ACB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EDBE574E-B6E8-4EB4-A2C1-0F5C862D8ACB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EDBE574E-B6E8-4EB4-A2C1-0F5C862D8ACB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EDBE574E-B6E8-4EB4-A2C1-0F5C862D8ACB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

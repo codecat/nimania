@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 using GbxRemoteNet;
 using Nimania.Runtime;
 using Nimania.Runtime.DbModels;
-using CSScriptLibrary;
 using System.IO;
 using NLog;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Reflection;
 
 namespace Nimania
 {
@@ -26,10 +28,20 @@ namespace Nimania
 		private GbxRemote m_remote;
 		private DbDriver m_database;
 
-		private List<AsmHelper> m_scripting = new List<AsmHelper>();
+		//private List<AsmHelper> m_scripting = new List<AsmHelper>();
 
 		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
+			CSharpCompilation compiler = CSharpCompilation.Create("Nimania.Plugins")
+				.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+				.AddReferences(
+				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
+				MetadataReference.CreateFromFile("GbxRemoteNet.dll"),
+				MetadataReference.CreateFromFile("Nimania.exe"),
+				MetadataReference.CreateFromFile("Nimania.Runtime.dll"),
+				MetadataReference.CreateFromFile("NLog.dll")
+				);
+
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
@@ -47,8 +59,8 @@ namespace Nimania
 				tasks.Add(Task.Factory.StartNew(() => {
 					string[] scriptFiles = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
 					try {
-						var asm = new AsmHelper(CSScript.LoadFiles(scriptFiles, asmRefs));
-						m_scripting.Add(asm);
+						//var asm = new AsmHelper(CSScript.LoadFiles(scriptFiles, asmRefs));
+						//m_scripting.Add(asm);
 						m_logger.Info("Compiled module: {0}", path);
 					} catch (Exception ex) {
 						m_logger.Error("Couldn't compile module: {0} - {1}", path, ex.ToString());
@@ -63,6 +75,7 @@ namespace Nimania
 		{
 			Plugin newPlugin = null;
 
+			/*
 			foreach (var module in m_scripting) {
 				var o = module.TryCreateObject(name);
 				if (o == null) {
@@ -71,6 +84,7 @@ namespace Nimania
 				newPlugin = (Plugin)o;
 				break;
 			}
+			*/
 
 			if (newPlugin == null) {
 				m_logger.Warn("Unknown plugin: '{0}'", name);
