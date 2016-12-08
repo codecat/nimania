@@ -13,6 +13,9 @@
     <EmbeddedResource Remove="Data\**" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="NLog.config" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp">
       <Version>2.0.0-rc</Version>
     </PackageReference>
@@ -34,5 +37,6 @@
     <ProjectReference Include="..\GbxRemoteNet\GbxRemoteNet.csproj" />
     <ProjectReference Include="..\Nimania.Runtime\Nimania.Runtime.csproj" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

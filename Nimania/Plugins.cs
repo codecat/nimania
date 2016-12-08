@@ -11,6 +11,7 @@ using NLog;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Nimania
 {
@@ -35,36 +36,41 @@ namespace Nimania
 			CSharpCompilation compiler = CSharpCompilation.Create("Nimania.Plugins")
 				.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
 				.AddReferences(
-				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(GbxValue).GetTypeInfo().Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(PluginManager).GetTypeInfo().Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(Plugin).GetTypeInfo().Assembly.Location),
-				MetadataReference.CreateFromFile(typeof(Logger).GetTypeInfo().Assembly.Location)
+				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location), // System (mscorlib)
+				MetadataReference.CreateFromFile(typeof(GbxValue).GetTypeInfo().Assembly.Location), // GbxRemoteNet
+				MetadataReference.CreateFromFile(typeof(PluginManager).GetTypeInfo().Assembly.Location), // Nimania
+				MetadataReference.CreateFromFile(typeof(Plugin).GetTypeInfo().Assembly.Location), // Nimania.Runtime
+				MetadataReference.CreateFromFile(typeof(Logger).GetTypeInfo().Assembly.Location) // NLog
 				);
 
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
 
-			string[] scriptPaths = Directory.GetDirectories("Data/Plugins/");
-
-			string[] asmRefs = new string[] { "GbxRemoteNet", "Nimania", "Nimania.Runtime", "CookComputing.XmlRpcV2", "NLog" };
+			string[] scriptPaths = Directory.GetFiles("Data/Plugins/", "*.cs", SearchOption.AllDirectories);
 
 			var tasks = new List<Task>();
 			foreach (var path in scriptPaths) {
-				tasks.Add(Task.Factory.StartNew(() => {
-					string[] scriptFiles = Directory.GetFiles(path, "*.cs", SearchOption.AllDirectories);
+				using (FileStream fs = File.OpenRead(path)) {
 					try {
-						//var asm = new AsmHelper(CSScript.LoadFiles(scriptFiles, asmRefs));
-						//m_scripting.Add(asm);
-						m_logger.Info("Compiled module: {0}", path);
+						compiler = compiler.AddSyntaxTrees(CSharpSyntaxTree.ParseText(Microsoft.CodeAnalysis.Text.SourceText.From(fs)));
+						m_logger.Info("Compiled script: {0}", path);
 					} catch (Exception ex) {
-						m_logger.Error("Couldn't compile module: {0} - {1}", path, ex.ToString());
-						m_errorCount++;
+						m_logger.Error("Couldn't compile script: {0} - {1}", path, ex.Message);
 					}
-				}));
+				}
 			}
-			Task.WaitAll(tasks.ToArray());
+
+			try {
+				using (MemoryStream ms = new MemoryStream()) {
+					compiler.Emit(ms);
+					AssemblyLoadContext.Default.LoadFromStream(ms);
+				}
+			} catch (Exception ex) {
+				m_logger.Error("Failed to load script assembly: {0}", ex.Message);
+			}
+
+			m_logger.Info("Done compiling all scripts!");
 		}
 
 		public Plugin Load(string name)
