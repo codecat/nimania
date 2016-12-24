@@ -33,27 +33,31 @@ namespace Nimania
 
 		public PluginManager(ConfigFile config, GbxRemote remote, DbDriver dbDriver)
 		{
+			var dd = typeof(Enumerable).GetTypeInfo().Assembly.Location;
+			var coreDir = Directory.GetParent(dd);
+
 			CSharpCompilation compiler = CSharpCompilation.Create("Nimania.Plugins")
 				.WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
 				.AddReferences(
-				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location), // System (mscorlib)
-				MetadataReference.CreateFromFile(typeof(GbxValue).GetTypeInfo().Assembly.Location), // GbxRemoteNet
-				MetadataReference.CreateFromFile(typeof(PluginManager).GetTypeInfo().Assembly.Location), // Nimania
-				MetadataReference.CreateFromFile(typeof(Plugin).GetTypeInfo().Assembly.Location), // Nimania.Runtime
-				MetadataReference.CreateFromFile(typeof(Logger).GetTypeInfo().Assembly.Location) // NLog
+				MetadataReference.CreateFromFile(typeof(object).GetTypeInfo().Assembly.Location), // System.Private.CoreLib
+				MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).GetTypeInfo().Assembly.Location), // System.Linq
+				MetadataReference.CreateFromFile(typeof(GbxRemoteNet.GbxValue).GetTypeInfo().Assembly.Location), // GbxRemoteNet
+				MetadataReference.CreateFromFile(typeof(Nimania.PluginManager).GetTypeInfo().Assembly.Location), // Nimania
+				MetadataReference.CreateFromFile(typeof(Nimania.Runtime.Plugin).GetTypeInfo().Assembly.Location), // Nimania.Runtime
+				MetadataReference.CreateFromFile(typeof(NLog.Logger).GetTypeInfo().Assembly.Location) // NLog
 				);
 
 			m_config = config;
 			m_remote = remote;
 			m_database = dbDriver;
 
-			string[] scriptPaths = Directory.GetFiles("Data/Plugins/", "*.cs", SearchOption.AllDirectories);
+			string[] scriptPaths = Directory.GetFiles("Data\\Plugins\\", "*.cs", SearchOption.AllDirectories);
 
 			var tasks = new List<Task>();
 			foreach (var path in scriptPaths) {
 				using (FileStream fs = File.OpenRead(path)) {
 					try {
-						compiler = compiler.AddSyntaxTrees(CSharpSyntaxTree.ParseText(Microsoft.CodeAnalysis.Text.SourceText.From(fs)));
+						compiler = compiler.AddSyntaxTrees(CSharpSyntaxTree.ParseText(Microsoft.CodeAnalysis.Text.SourceText.From(fs), null, path));
 						m_logger.Info("Compiled script: {0}", path);
 					} catch (Exception ex) {
 						m_logger.Error("Couldn't compile script: {0} - {1}", path, ex.Message);
@@ -63,8 +67,14 @@ namespace Nimania
 
 			try {
 				using (MemoryStream ms = new MemoryStream()) {
-					compiler.Emit(ms);
-					AssemblyLoadContext.Default.LoadFromStream(ms);
+					var result = compiler.Emit(ms);
+					if (!result.Success) {
+						foreach (var diag in result.Diagnostics) {
+							m_logger.Error("Compilation error: {0}", diag.ToString());
+						}
+					} else {
+						AssemblyLoadContext.Default.LoadFromStream(ms);
+					}
 				}
 			} catch (Exception ex) {
 				m_logger.Error("Failed to load script assembly: {0}", ex.Message);
